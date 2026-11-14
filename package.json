@@ -1,0 +1,535 @@
+{
+  "name": "brokspace",
+  "displayName": "Brokspace",
+  "description": "%description%",
+  "version": "0.1.0",
+  "publisher": "brokspace",
+  "license": "(MIT OR Apache-2.0)",
+  "icon": "media/icon.png",
+  "homepage": "https://brokspace.org",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brokspace/vscode"
+  },
+  "bugs": {
+    "url": "https://github.com/brokspace/vscode/issues"
+  },
+  "galleryBanner": {
+    "color": "#0B0E12",
+    "theme": "dark"
+  },
+  "categories": [
+    "AI",
+    "Chat",
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "brokspace",
+    "brok",
+    "semantic search",
+    "code search",
+    "local llm",
+    "ollama",
+    "memory",
+    "mcp",
+    "rag"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "main": "./dist/extension.js",
+  "l10n": "./l10n",
+  "activationEvents": [
+    "workspaceContains:.brokspace/brok.yml",
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "brokspace",
+          "title": "Brokspace",
+          "icon": "media/mark.svg"
+        }
+      ]
+    },
+    "views": {
+      "brokspace": [
+        {
+          "id": "brokspace.overview",
+          "name": "%view.overview%",
+          "icon": "media/mark.svg"
+        },
+        {
+          "id": "brokspace.memory",
+          "name": "%view.memory%",
+          "icon": "media/mark.svg"
+        },
+        {
+          "id": "brokspace.links",
+          "name": "%view.links%",
+          "icon": "media/mark.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "brokspace.shards",
+          "name": "%view.shards%",
+          "icon": "media/mark.svg",
+          "visibility": "collapsed"
+        },
+        {
+          "id": "brokspace.skills",
+          "name": "%view.skills%",
+          "icon": "media/mark.svg",
+          "visibility": "collapsed"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "brokspace.overview",
+        "contents": "%welcome.noFolder%",
+        "when": "brokspace.state == 'no-folder'"
+      },
+      {
+        "view": "brokspace.overview",
+        "contents": "%welcome.noBrok%",
+        "when": "brokspace.state == 'no-brok'"
+      },
+      {
+        "view": "brokspace.overview",
+        "contents": "%welcome.outdated%",
+        "when": "brokspace.state == 'outdated'"
+      },
+      {
+        "view": "brokspace.overview",
+        "contents": "%welcome.setup%",
+        "when": "brokspace.state == 'not-initialized'"
+      },
+      {
+        "view": "brokspace.overview",
+        "contents": "%welcome.error%",
+        "when": "brokspace.state == 'error'"
+      },
+      {
+        "view": "brokspace.memory",
+        "contents": "%welcome.memory%",
+        "when": "brokspace.state == 'ready' && brokspace.memoryCount == 0"
+      },
+      {
+        "view": "brokspace.links",
+        "contents": "%welcome.links%",
+        "when": "brokspace.state == 'ready' && brokspace.linkCount == 0"
+      },
+      {
+        "view": "brokspace.shards",
+        "contents": "%welcome.shards%",
+        "when": "brokspace.state == 'ready' && brokspace.shardCount == 0"
+      }
+    ],
+    "commands": [
+      {
+        "command": "brokspace.search",
+        "title": "%cmd.search%",
+        "category": "Brokspace",
+        "icon": "$(search)"
+      },
+      {
+        "command": "brokspace.ask",
+        "title": "%cmd.ask%",
+        "category": "Brokspace",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "brokspace.openChat",
+        "title": "%cmd.openChat%",
+        "category": "Brokspace",
+        "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "brokspace.review",
+        "title": "%cmd.review%",
+        "category": "Brokspace",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "brokspace.reviewStaged",
+        "title": "%cmd.reviewStaged%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.commitMessage",
+        "title": "%cmd.commitMessage%",
+        "category": "Brokspace",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "brokspace.runSkill",
+        "title": "%cmd.runSkill%",
+        "category": "Brokspace",
+        "icon": "$(play)"
+      },
+      {
+        "command": "brokspace.remember",
+        "title": "%cmd.remember%",
+        "category": "Brokspace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "brokspace.rememberSelection",
+        "title": "%cmd.rememberSelection%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.forgetMemory",
+        "title": "%cmd.forgetMemory%",
+        "category": "Brokspace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "brokspace.openMemory",
+        "title": "%cmd.openMemory%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.addLink",
+        "title": "%cmd.addLink%",
+        "category": "Brokspace",
+        "icon": "$(link)"
+      },
+      {
+        "command": "brokspace.syncLinks",
+        "title": "%cmd.syncLinks%",
+        "category": "Brokspace",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "brokspace.removeLink",
+        "title": "%cmd.removeLink%",
+        "category": "Brokspace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "brokspace.settings",
+        "title": "%cmd.settings%",
+        "category": "Brokspace",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "brokspace.showDiagnostics",
+        "title": "%cmd.showDiagnostics%",
+        "category": "Brokspace",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "brokspace.reportBug",
+        "title": "%cmd.reportBug%",
+        "category": "Brokspace",
+        "icon": "$(bug)"
+      },
+      {
+        "command": "brokspace.setup",
+        "title": "%cmd.setup%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.start",
+        "title": "%cmd.start%",
+        "category": "Brokspace",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "brokspace.stop",
+        "title": "%cmd.stop%",
+        "category": "Brokspace",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "brokspace.restart",
+        "title": "%cmd.restart%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.reindex",
+        "title": "%cmd.reindex%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.doctor",
+        "title": "%cmd.doctor%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.showLogs",
+        "title": "%cmd.showLogs%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.connectAgents",
+        "title": "%cmd.connectAgents%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.exportSkills",
+        "title": "%cmd.exportSkills%",
+        "category": "Brokspace",
+        "icon": "$(export)"
+      },
+      {
+        "command": "brokspace.installShard",
+        "title": "%cmd.installShard%",
+        "category": "Brokspace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "brokspace.removeShard",
+        "title": "%cmd.removeShard%",
+        "category": "Brokspace",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "brokspace.addProvider",
+        "title": "%cmd.addProvider%",
+        "category": "Brokspace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "brokspace.refresh",
+        "title": "%cmd.refresh%",
+        "category": "Brokspace",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "brokspace.installHelp",
+        "title": "%cmd.installHelp%",
+        "category": "Brokspace"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "brokspace.search",
+          "when": "view == brokspace.overview",
+          "group": "navigation@1"
+        },
+        {
+          "command": "brokspace.refresh",
+          "when": "view == brokspace.overview",
+          "group": "navigation@2"
+        },
+        {
+          "command": "brokspace.settings",
+          "when": "view == brokspace.overview",
+          "group": "navigation@3"
+        },
+        {
+          "command": "brokspace.remember",
+          "when": "view == brokspace.memory",
+          "group": "navigation@1"
+        },
+        {
+          "command": "brokspace.addLink",
+          "when": "view == brokspace.links",
+          "group": "navigation@1"
+        },
+        {
+          "command": "brokspace.syncLinks",
+          "when": "view == brokspace.links",
+          "group": "navigation@2"
+        },
+        {
+          "command": "brokspace.installShard",
+          "when": "view == brokspace.shards",
+          "group": "navigation@1"
+        },
+        {
+          "command": "brokspace.exportSkills",
+          "when": "view == brokspace.skills",
+          "group": "navigation@1"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "brokspace.forgetMemory",
+          "when": "view == brokspace.memory && viewItem == memory",
+          "group": "inline"
+        },
+        {
+          "command": "brokspace.removeLink",
+          "when": "view == brokspace.links && viewItem == link",
+          "group": "inline@2"
+        },
+        {
+          "command": "brokspace.syncLinks",
+          "when": "view == brokspace.links && viewItem == link",
+          "group": "inline@1"
+        },
+        {
+          "command": "brokspace.removeShard",
+          "when": "view == brokspace.shards && viewItem == shard",
+          "group": "inline"
+        },
+        {
+          "command": "brokspace.runSkill",
+          "when": "view == brokspace.skills && viewItem == skill",
+          "group": "inline"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "brokspace.commitMessage",
+          "when": "scmProvider == git && brokspace.state == 'ready'",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "brokspace.rememberSelection",
+          "when": "editorHasSelection && brokspace.state == 'ready'",
+          "group": "z_brokspace@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "brokspace.forgetMemory",
+          "when": "brokspace.state == 'ready'"
+        },
+        {
+          "command": "brokspace.openMemory",
+          "when": "false"
+        },
+        {
+          "command": "brokspace.removeLink",
+          "when": "brokspace.state == 'ready'"
+        },
+        {
+          "command": "brokspace.removeShard",
+          "when": "brokspace.state == 'ready'"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "brokspace.search",
+        "key": "ctrl+alt+f",
+        "mac": "cmd+alt+f"
+      },
+      {
+        "command": "brokspace.openChat",
+        "key": "ctrl+shift+alt+b",
+        "mac": "cmd+shift+alt+b"
+      },
+      {
+        "command": "brokspace.remember",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
+        "when": "!editorHasSelection"
+      },
+      {
+        "command": "brokspace.rememberSelection",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
+        "when": "editorHasSelection"
+      },
+      {
+        "command": "brokspace.settings",
+        "key": "ctrl+alt+oem_comma",
+        "mac": "cmd+alt+oem_comma"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "brokspace.agent",
+        "name": "brokspace",
+        "fullName": "Brokspace",
+        "description": "%chat.description%",
+        "isSticky": true,
+        "commands": [
+          {
+            "name": "review",
+            "description": "%chat.review%"
+          },
+          {
+            "name": "staged",
+            "description": "%chat.staged%"
+          },
+          {
+            "name": "skill",
+            "description": "%chat.skill%"
+          },
+          {
+            "name": "search",
+            "description": "%chat.search%"
+          },
+          {
+            "name": "remember",
+            "description": "%chat.remember%"
+          }
+        ]
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "brokspace.mcp",
+        "label": "Brokspace"
+      }
+    ],
+    "configuration": {
+      "title": "Brokspace",
+      "properties": {
+        "brokspace.brokPath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine-overridable",
+          "markdownDescription": "%config.brokPath%"
+        },
+        "brokspace.mcp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%config.mcp%"
+        },
+        "brokspace.chat.saveSessions": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%config.saveSessions%"
+        },
+        "brokspace.statusBar.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "%config.statusBar%"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "node esbuild.mjs --watch",
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p webview",
+    "lint": "biome check",
+    "test:unit": "node esbuild.mjs --tests && node --test \"out/test/unit/*.test.js\"",
+    "test:integration": "node esbuild.mjs && node esbuild.mjs --tests && vscode-test",
+    "test": "npm run test:unit",
+    "l10n:check": "node scripts/check-l10n.mjs",
+    "package": "vsce package --no-dependencies",
+    "vscode:prepublish": "npm run build -- --production"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.2",
+    "@types/markdown-it": "^14.1.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.17.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@types/vscode": "~1.90.0",
+    "@vscode/codicons": "^0.0.36",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.0",
+    "markdown-it": "^14.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "~5.9.3"
+  }
+}

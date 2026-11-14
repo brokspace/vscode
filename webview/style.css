@@ -1,0 +1,442 @@
+/* Brokspace webviews (settings, chat). Colors come from the editor's theme
+   (--vscode-*), so every theme works; settings.css is the Brokspace IDE
+   settings page, which reads the --theia-* names mapped here. */
+
+@import "./settings.css";
+
+:root {
+    /* Brokspace tokens: a 4 px scale, three radii, two icon sizes. */
+    --bk-forge: #ff8a3d;
+    --bk-accent: var(--bk-forge);
+    --bk-space-1: 4px;
+    --bk-space-2: 8px;
+    --bk-space-3: 12px;
+    --bk-space-4: 16px;
+    --bk-space-6: 24px;
+    --bk-space-8: 32px;
+    --bk-radius-sm: 4px;
+    --bk-radius: 6px;
+    --bk-radius-lg: 10px;
+    --bk-icon: 16px;
+    --bk-line: 1.5;
+
+    /* The IDE's theme names, on the editor's theme. */
+    --theia-foreground: var(--vscode-foreground);
+    --theia-descriptionForeground: var(--vscode-descriptionForeground);
+    --theia-errorForeground: var(--vscode-errorForeground);
+    --theia-focusBorder: var(--vscode-focusBorder);
+    --theia-icon-foreground: var(--vscode-icon-foreground);
+    --theia-textLink-foreground: var(--vscode-textLink-foreground);
+    --theia-textCodeBlock-background: var(--vscode-textCodeBlock-background);
+    --theia-editor-background: var(--vscode-editor-background);
+    --theia-editorWidget-background: var(--vscode-editorWidget-background);
+    --theia-editorWarning-foreground: var(--vscode-editorWarning-foreground);
+    --theia-input-background: var(--vscode-input-background);
+    --theia-input-border: var(--vscode-input-border, transparent);
+    --theia-button-foreground: var(--vscode-button-foreground);
+    --theia-list-hoverBackground: var(--vscode-list-hoverBackground);
+    --theia-list-activeSelectionBackground: var(--vscode-list-activeSelectionBackground);
+    --theia-list-activeSelectionForeground: var(--vscode-list-activeSelectionForeground);
+    --theia-panel-border: var(--vscode-panel-border);
+    --theia-widget-border: var(--vscode-widget-border, var(--vscode-panel-border));
+    --theia-sideBar-background: var(--vscode-sideBar-background, var(--vscode-editorWidget-background));
+    --theia-sideBarSectionHeader-background: var(--vscode-sideBarSectionHeader-background);
+    --theia-statusBarItem-warningForeground: var(--vscode-statusBarItem-warningForeground);
+    --theia-testing-iconPassed: var(--vscode-testing-iconPassed, #3fb950);
+    --theia-toolbar-hoverBackground: var(--vscode-toolbar-hoverBackground);
+    --theia-code-font-family: var(--vscode-editor-font-family);
+    --theia-code-font-size: var(--vscode-editor-font-size);
+    --theia-ui-font-size0: calc(var(--vscode-font-size) * 0.9);
+    --theia-ui-font-size1: var(--vscode-font-size);
+}
+
+/* Light themes: the darker forge keeps contrast. */
+body.vscode-light,
+body.vscode-high-contrast-light {
+    --bk-accent: #a8410f;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    color: var(--vscode-foreground);
+    background: var(--vscode-editor-background);
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+}
+
+/* The settings page is the IDE widget's root. */
+body.page-settings #root {
+    container-type: inline-size;
+    overflow: auto;
+    line-height: var(--bk-line);
+}
+
+/* ---------------------------------------------------------------- controls */
+
+.theia-button,
+.bk-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+    min-height: 26px;
+    padding: 4px 12px;
+    border: 1px solid var(--vscode-button-border, transparent);
+    border-radius: var(--bk-radius-sm);
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    font: inherit;
+    cursor: pointer;
+}
+
+.theia-button:hover,
+.bk-button:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+.theia-button.secondary {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+.theia-button.secondary:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.theia-button:disabled,
+.bk-button:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.theia-button:focus-visible,
+.bk-button:focus-visible,
+.theia-input:focus,
+.theia-select:focus {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+.theia-input,
+.theia-select {
+    padding: 4px 6px;
+    border: 1px solid var(--vscode-input-border, transparent);
+    border-radius: 2px;
+    background: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    font: inherit;
+}
+
+.theia-input::placeholder {
+    color: var(--vscode-input-placeholderForeground);
+}
+
+.theia-select {
+    background: var(--vscode-dropdown-background);
+    border-color: var(--vscode-dropdown-border, transparent);
+    color: var(--vscode-dropdown-foreground);
+}
+
+/* From the IDE's Brokspace view: the pieces the settings page uses. */
+.bk-muted {
+    color: var(--theia-descriptionForeground);
+    padding: var(--bk-space-1) 0;
+}
+
+.bk-error {
+    color: var(--theia-errorForeground);
+    white-space: pre-wrap;
+}
+
+.bk-card-icon {
+    font-size: calc(var(--bk-icon) * 1.5) !important;
+    color: var(--bk-accent);
+}
+
+.bk-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: calc(var(--bk-icon) + 6px);
+    height: calc(var(--bk-icon) + 6px);
+    padding: 0;
+    border: none;
+    border-radius: var(--bk-radius-sm);
+    background: none;
+    color: var(--theia-icon-foreground, var(--theia-foreground));
+    font-size: var(--bk-icon);
+    cursor: pointer;
+}
+
+.bk-icon-button:hover {
+    background: var(--theia-toolbar-hoverBackground);
+}
+
+.bk-props {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 2px var(--bk-space-3);
+    margin: 0;
+    font-size: var(--theia-ui-font-size0);
+}
+
+.bk-props dt {
+    color: var(--theia-descriptionForeground);
+}
+
+.bk-props dd {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bk-spacer {
+    flex: 1;
+}
+
+.bk-link-button {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--theia-textLink-foreground);
+    font: inherit;
+    cursor: pointer;
+}
+
+/* ---------------------------------------------------------------- chat */
+
+.bk-chat {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+}
+
+.bk-chat-head {
+    display: flex;
+    align-items: center;
+    gap: var(--bk-space-2);
+    padding: var(--bk-space-2) var(--bk-space-4);
+    border-bottom: 1px solid var(--theia-widget-border);
+}
+
+.bk-chat-title {
+    font-weight: 600;
+}
+
+.bk-chat-model {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--theia-descriptionForeground);
+    font-size: var(--theia-ui-font-size0);
+}
+
+.bk-chat-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--bk-space-4);
+}
+
+.bk-chat-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--bk-space-3);
+    margin-top: 12vh;
+    text-align: center;
+    color: var(--theia-descriptionForeground);
+}
+
+.bk-chat-mark {
+    font-size: 28px !important;
+    color: var(--bk-accent);
+}
+
+.bk-chat-lead {
+    max-width: 420px;
+    margin: 0;
+}
+
+.bk-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--bk-space-2);
+    max-width: 560px;
+}
+
+.bk-suggestion {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+    padding: 6px 12px;
+    border: 1px solid var(--theia-widget-border);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--theia-foreground);
+    font: inherit;
+    cursor: pointer;
+}
+
+.bk-suggestion:hover {
+    border-color: color-mix(in srgb, var(--bk-accent) 55%, transparent);
+    background: var(--theia-list-hoverBackground);
+}
+
+.bk-turn {
+    margin-bottom: var(--bk-space-6);
+}
+
+.bk-question {
+    width: fit-content;
+    max-width: 85%;
+    margin-left: auto;
+    padding: var(--bk-space-2) var(--bk-space-3);
+    border-radius: var(--bk-radius-lg) var(--bk-radius-lg) var(--bk-radius-sm) var(--bk-radius-lg);
+    background: var(--vscode-editorWidget-background, var(--theia-list-hoverBackground));
+    border: 1px solid var(--theia-widget-border);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.bk-answer {
+    margin-top: var(--bk-space-3);
+    line-height: 1.6;
+}
+
+.bk-progress,
+.bk-turn-model {
+    color: var(--theia-descriptionForeground);
+    font-size: var(--theia-ui-font-size0);
+}
+
+.bk-markdown > :first-child {
+    margin-top: 0;
+}
+
+.bk-markdown pre {
+    overflow-x: auto;
+    padding: var(--bk-space-3);
+    border-radius: var(--bk-radius);
+    background: var(--theia-textCodeBlock-background);
+}
+
+.bk-markdown code {
+    font-family: var(--theia-code-font-family);
+    font-size: var(--theia-code-font-size);
+}
+
+.bk-markdown a {
+    color: var(--theia-textLink-foreground);
+}
+
+.bk-turn-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--bk-space-2);
+    padding: var(--bk-space-2) var(--bk-space-3);
+    border-radius: var(--bk-radius);
+    border: 1px solid color-mix(in srgb, var(--theia-errorForeground) 40%, transparent);
+    color: var(--theia-errorForeground);
+    white-space: pre-wrap;
+}
+
+.bk-sources {
+    margin-top: var(--bk-space-3);
+}
+
+.bk-sources-title {
+    margin-bottom: var(--bk-space-1);
+    color: var(--theia-descriptionForeground);
+    font-size: var(--theia-ui-font-size0);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.bk-sources ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-source {
+    display: flex;
+    align-items: center;
+    gap: var(--bk-space-2);
+    width: 100%;
+    padding: 3px var(--bk-space-2);
+    border: none;
+    border-radius: var(--bk-radius-sm);
+    background: none;
+    color: var(--theia-foreground);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.bk-source:hover {
+    background: var(--theia-list-hoverBackground);
+}
+
+.bk-source code {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--theia-textLink-foreground);
+}
+
+.bk-source-symbol {
+    color: var(--theia-descriptionForeground);
+}
+
+.bk-chat-input {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--bk-space-2);
+    margin: 0 var(--bk-space-4) var(--bk-space-4);
+    padding: var(--bk-space-2);
+    border: 1px solid var(--vscode-input-border, var(--theia-widget-border));
+    border-radius: var(--bk-radius-lg);
+    background: var(--vscode-input-background);
+}
+
+.bk-chat-input:focus-within {
+    border-color: var(--vscode-focusBorder);
+}
+
+.bk-chat-input textarea {
+    flex: 1;
+    resize: none;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--vscode-input-foreground);
+    font: inherit;
+    line-height: 1.5;
+}
+
+.bk-send {
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: var(--bk-radius);
+    background: var(--vscode-button-background);
+    color: var(--vscode-button-foreground);
+    cursor: pointer;
+}
+
+.bk-send:disabled {
+    opacity: 0.4;
+    cursor: default;
+}

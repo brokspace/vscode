@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and help
+    url: https://github.com/brokspace/brok/discussions/categories/q-a
+    about: How do I...? Ask in Discussions.
+  - name: Brokspace documentation
+    url: https://brokspace.org/docs
+    about: Install, search, memory, linked workspaces and editor integrations.
+  - name: Security vulnerability
+    url: https://github.com/brokspace/vscode/security/advisories/new
+    about: Report security issues privately, never in a public issue.

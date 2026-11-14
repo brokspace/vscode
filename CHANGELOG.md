@@ -1,0 +1,30 @@
+# Changelog
+
+All notable changes to Brokspace for VS Code. The format follows
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
+uses [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+## [0.1.0]
+
+The first release, replacing Brokspace IDE. Needs brok 0.4.0 or newer.
+
+### Added
+
+- Brokspace sidebar: overview, memories, linked workspaces, shards and skills,
+  with welcome views that guide setup.
+- Search across the workspace and its linked workspaces as you type.
+- Chat panel with answers from your LLM through brok and their sources;
+  `/review`, `/review staged`, `/skill`. Falls back to the index without an LLM.
+- `@brokspace` chat participant where the editor has the Chat API.
+- Memory: remember notes or the selection, browse, search and forget;
+  chats saved as session memories.
+- Linked workspaces: add a folder or Git repository, sync, remove.
+- Reviews of the working tree or staged changes, and commit messages from the
+  Source Control title bar.
+- Skills, shards and agent setup commands.
+- brok's MCP server registered with the editor (VS Code 1.101+).
+- Settings page: model and providers, memory, linked workspaces, metrics,
+  diagnostics and bug reports.
+- English and Brazilian Portuguese.

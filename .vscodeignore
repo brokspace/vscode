@@ -1,0 +1,15 @@
+**
+!dist/**
+!media/**
+!l10n/**
+!package.json
+!package.nls.json
+!package.nls.pt-br.json
+!README.md
+!CHANGELOG.md
+!LICENSE
+!LICENSE-MIT
+!LICENSE-APACHE
+!.github/brokspace.png
+!.github/brokspace-on-dark.png
+dist/**/*.map

@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      react:
+        patterns: ["react", "react-dom", "@types/react", "@types/react-dom"]
+      vscode-test:
+        patterns: ["@vscode/test-*"]
+    ignore:
+      # Kept at the oldest VS Code the extension supports (engines.vscode), for the forks.
+      - dependency-name: "@types/vscode"
+      # Matches the Node that VS Code's extension host ships.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

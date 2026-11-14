@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, types and translations
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run l10n:check
+
+  test:
+    name: Tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Download brok
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "${{ runner.os }}-${{ runner.arch }}" in
+            Linux-X64) asset=brok-linux-x86_64 ;;
+            macOS-ARM64) asset=brok-macos-aarch64 ;;
+            macOS-X64) asset=brok-macos-x86_64 ;;
+            Windows-X64) asset=brok-windows-x86_64.exe ;;
+          esac
+          mkdir -p "$RUNNER_TEMP/brok"
+          gh release download --repo brokspace/brok --pattern "$asset" --pattern "$asset.sha256" --dir "$RUNNER_TEMP/brok"
+          cd "$RUNNER_TEMP/brok"
+          expected=$(cut -d' ' -f1 "$asset.sha256")
+          actual=$( (sha256sum "$asset" 2>/dev/null || shasum -a 256 "$asset") | cut -d' ' -f1)
+          [ "$expected" = "$actual" ] || { echo "::error::checksum mismatch for $asset"; exit 1; }
+          name=brok; [ "${{ runner.os }}" = Windows ] && name=brok.exe
+          mv "$asset" "$name" && chmod +x "$name"
+          echo "BROK_TEST_PATH=$RUNNER_TEMP/brok/$name" >> "$GITHUB_ENV"
+          "./$name" --version
+      - name: Unit tests
+        run: npm run test:unit
+      - name: Integration tests
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:integration
+      - name: Integration tests
+        if: runner.os != 'Linux'
+        run: npm run test:integration
+
+  package:
+    name: Package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vsix
+          path: "*.vsix"
