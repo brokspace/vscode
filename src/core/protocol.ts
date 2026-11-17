@@ -5,7 +5,7 @@
  * the one contract between Brokspace and editors, scripts and CI.
  */
 
-/** Oldest brok with the JSON output the IDE relies on (doctor, stats and bug reports). */
+/** Oldest brok with the JSON output the extension relies on (doctor, stats and bug reports). */
 export const MINIMUM_BROK_VERSION = '0.4.0';
 
 export interface BrokInfo {
@@ -60,7 +60,7 @@ export interface MemoryInput {
     tags?: string[];
     /** Replaces the memory with this id (same scope). */
     id?: string;
-    /** Who writes it: `ide` by default. */
+    /** Who writes it, for example `vscode` or `mcp`. */
     source?: string;
 }
 
@@ -110,7 +110,7 @@ export interface ShardInfo {
     source?: string | null;
 }
 
-/** A shard's `shard.json` (the fields the IDE shows). */
+/** A shard's `shard.json` (the fields the extension shows). */
 export interface ShardManifest {
     name: string;
     version: string;
@@ -232,7 +232,7 @@ export interface BugReport {
     report: string;
 }
 
-/** `brok config get --json`: the parts of brok.yml the IDE edits. */
+/** `brok config get --json`: the parts of brok.yml the extension edits. */
 export interface BrokConfig {
     workspace: {
         submodules: boolean;

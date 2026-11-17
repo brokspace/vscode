@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Send extension bug reports directly to `brokspace/vscode` when the installed
+  brok supports the native `vscode` report target. Older brok releases keep
+  the existing compatible fallback.
+
 ## [0.1.0]
 
 The first release, replacing Brokspace IDE. Needs brok 0.4.0 or newer.
