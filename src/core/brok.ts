@@ -178,16 +178,10 @@ export class Brok {
         return this.json<StatsSummary>(root, ['stats', '--json', `--days=${Math.max(1, Math.round(days))}`]);
     }
 
-    /**
-     * `brok bug --json`: saves the report and returns the prefilled issue
-     * link (opens nothing). brok knows the `brok` and `brok-agent`
-     * repositories; reports about this extension use the same form in
-     * brokspace/vscode.
-     */
+    /** `brok bug --json`: saves the report and returns the prefilled issue link (opens nothing). */
     async bugReport(root: string | undefined, bug: BugInput): Promise<BugReport> {
-        const repo = bug.repo === 'vscode' ? 'brok' : bug.repo;
         // `--key=value`: a value starting with "-" is never read as an option.
-        const args = ['bug', '--json', '--yes', `--repo=${repo}`, `--title=${bug.title}`];
+        const args = ['bug', '--json', '--yes', `--repo=${bug.repo}`, `--title=${bug.title}`];
         const optional: [string, string | undefined][] = [
             ['what-happened', bug.whatHappened],
             ['expected', bug.expected],
@@ -199,12 +193,20 @@ export class Brok {
                 args.push(`--${key}=${value}`);
             }
         }
-        const report = await this.json<BugReport>(root || os.homedir(), args);
-        if (bug.repo === 'vscode') {
+        try {
+            return await this.json<BugReport>(root || os.homedir(), args);
+        } catch (error) {
+            // brok 0.4.0 predates the native `vscode` target. Keep bug reports
+            // working for existing extension users while new brok releases use it.
+            if (bug.repo !== 'vscode') {
+                throw error;
+            }
+            const legacyArgs = args.map((arg) => (arg === '--repo=vscode' ? '--repo=brok' : arg));
+            const report = await this.json<BugReport>(root || os.homedir(), legacyArgs);
             report.repo = 'vscode';
             report.url = report.url.replace('/brokspace/brok/issues/', '/brokspace/vscode/issues/');
+            return report;
         }
-        return report;
     }
 
     /**
