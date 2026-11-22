@@ -6,6 +6,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The release workflow publishes to the Visual Studio Marketplace with
+  Trusted Publishing (OIDC) instead of a `VSCE_PAT` secret. Open VSX publishing
+  is unchanged. See the setup in the brok repository, `docs/publishing.md`.
+- `package.json` declares the license as the SPDX expression
+  `MIT OR Apache-2.0`.
+
 ### Fixed
 
 - Send extension bug reports directly to `brokspace/vscode` when the installed
