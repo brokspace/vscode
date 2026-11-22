@@ -4,7 +4,7 @@
   "description": "%description%",
   "version": "0.1.0",
   "publisher": "brokspace",
-  "license": "(MIT OR Apache-2.0)",
+  "license": "MIT OR Apache-2.0",
   "icon": "media/icon.png",
   "homepage": "https://brokspace.org",
   "repository": {
