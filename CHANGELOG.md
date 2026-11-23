@@ -6,28 +6,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
-
-- Download on first use: when brok is not found, the extension offers to download it from the
-  brokspace/brok GitHub releases, verified against its published SHA-256, into its own storage
-  (no administrator rights). An existing install always wins. New command
-  **Brokspace: Download and Install brok** (brokspace/vscode#19).
-
-### Changed
-
-- The release workflow publishes to the Visual Studio Marketplace with
-  Trusted Publishing (OIDC) instead of a `VSCE_PAT` secret. Open VSX publishing
-  is unchanged. See the setup in the brok repository, `docs/publishing.md`.
-- `package.json` declares the license as the SPDX expression
-  `MIT OR Apache-2.0`.
-
-### Fixed
-
-- Send extension bug reports directly to `brokspace/vscode` when the installed
-  brok supports the native `vscode` report target. Older brok releases keep
-  the existing compatible fallback.
-
-## [0.1.0]
+## [0.1.0] - 2026-11-23
 
 The first release, replacing Brokspace IDE. Needs brok 0.4.0 or newer.
 
@@ -49,3 +28,21 @@ The first release, replacing Brokspace IDE. Needs brok 0.4.0 or newer.
 - Settings page: model and providers, memory, linked workspaces, metrics,
   diagnostics and bug reports.
 - English and Brazilian Portuguese.
+- Download on first use: when brok is not found, the extension offers to download it from the
+  brokspace/brok GitHub releases, verified against its published SHA-256, into its own storage
+  (no administrator rights). An existing install always wins. New command
+  **Brokspace: Download and Install brok** (brokspace/vscode#19).
+
+### Changed
+
+- The release workflow publishes to the Visual Studio Marketplace with
+  Trusted Publishing (OIDC) instead of a `VSCE_PAT` secret. Open VSX publishing
+  is unchanged. See the setup in the brok repository, `docs/publishing.md`.
+- `package.json` declares the license as the SPDX expression
+  `MIT OR Apache-2.0`.
+
+### Fixed
+
+- Send extension bug reports directly to `brokspace/vscode` when the installed
+  brok supports the native `vscode` report target. Older brok releases keep
+  the existing compatible fallback.
