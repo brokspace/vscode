@@ -84,7 +84,9 @@ describe('installBrok', () => {
         assert.equal(result.sha256, SHA);
         assert.equal(result.path, managedExecutable(dir, 'linux'));
         assert.deepEqual(fs.readFileSync(result.path), BODY);
-        assert.ok(fs.statSync(result.path).mode & 0o100, 'executable');
+        if (process.platform !== 'win32') {
+            assert.ok(fs.statSync(result.path).mode & 0o100, 'executable');
+        }
         assert.equal(seen.at(-1), BODY.length);
         assert.ok(
             urls.every((u) => u.startsWith('https://api.github.com/') || u.startsWith('https://github.com/brokspace/brok/releases/')),
