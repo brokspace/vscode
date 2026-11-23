@@ -15,6 +15,10 @@ through [brok](https://github.com/brokspace/brok).
 Runs in VS Code 1.90+ and is designed to install in editors based on it (see [Editors](#editors)).
 English and Brazilian Portuguese.
 
+![Searching a workspace by meaning in VS Code with Brokspace: type a question, pick a result, land on the matching lines](docs/images/search.gif)
+
+_Searching by meaning with `Ctrl+Alt+F`, in the brok repository itself, with text search (no embeddings model)._
+
 ## What's inside
 
 |                                  |                                                                                                                                                                                  |

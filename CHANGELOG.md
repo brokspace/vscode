@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Search results were hidden whenever the words you typed did not match a result's label, which is most natural-language queries. brok ranks the results, and they are now always shown.
+
 ## [0.1.0] - 2026-11-23
 
 The first release, replacing Brokspace IDE. Needs brok 0.4.0 or newer.
