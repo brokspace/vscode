@@ -77,18 +77,69 @@ diagnostics (secrets masked) in the right repository.
 Everything else (the model, providers, memory, linked workspaces) lives in
 `.brokspace/brok.yml`, so the CLI, the extension and your agents share it.
 
+## Editors
+
+Visual Studio Code is the supported and tested editor. The extension uses only the public extension API
+(`engines.vscode` is `^1.90.0`), so it is designed to install in editors based on VS Code, such as Cursor,
+Windsurf, Devin Desktop and VSCodium. That is a design goal, not a guarantee: we test in VS Code only, and a
+feature that needs an API a fork lacks (the `@brokspace` chat participant, MCP registration) is turned off
+while the rest keeps working. The Visual Studio Marketplace serves Microsoft's products; in other editors,
+install the `.vsix` from the [GitHub releases](https://github.com/brokspace/vscode/releases) with
+**Extensions: Install from VSIX**. Open VSX publishing is planned. Please report problems with the editor and
+its version.
+
 ## Development
 
+You need Node.js 24 and VS Code 1.90 or newer. brok (0.4.0 or newer) is optional for most work; the contract
+and integration tests use it when `BROK_TEST_PATH` points at a binary.
+
 ```sh
+git clone https://github.com/brokspace/vscode && cd vscode
+git switch staging         # the reference branch; open PRs against it
 npm ci
-npm run build              # dist/ (extension and webviews)
-npm run lint && npm run typecheck && npm run l10n:check
-npm run test:unit          # set BROK_TEST_PATH to a brok binary for the contract tests
-npm run test:integration   # in a downloaded VS Code
-npm run package            # brokspace-<version>.vsix
 ```
 
-Press `F5` with the folder open in VS Code to run the extension in a new window.
+### Run it
+
+Open the folder in VS Code and press `F5` (**Run Extension**). A second window, the Extension Development
+Host, opens with the extension loaded; open a project folder in it and run **Brokspace: Set Up Workspace**.
+`npm run watch` rebuilds on save; reload the host window (`Ctrl+R`) to pick up changes.
+
+To try it like a user would, build the package and install it into a throwaway profile, leaving your own
+editor untouched:
+
+```sh
+npm run package            # brokspace-<version>.vsix
+code --user-data-dir /tmp/brok-ud --extensions-dir /tmp/brok-ext --install-extension brokspace-*.vsix
+code --user-data-dir /tmp/brok-ud --extensions-dir /tmp/brok-ext <a project folder>
+```
+
+### Validate it
+
+Run what CI runs before every push:
+
+```sh
+npm run lint && npm run typecheck && npm run l10n:check && npm run test:unit
+```
+
+| Command                    | What it checks                                                                                                                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run test:unit`        | Pure logic with `node:test`: brok's JSON, the downloader, search, formatting. Fast, no editor.                                                                                          |
+| `npm run test:integration` | The extension inside a downloaded VS Code (needs a display; use `xvfb-run` on a headless Linux). Set `BROK_TEST_PATH=/path/to/brok` to also run the test that sets up a real workspace. |
+| `npm run l10n:check`       | Every user-visible string has a Portuguese translation (`npm run l10n:check -- --write` extracts new ones).                                                                             |
+
+New or changed strings go through `vscode.l10n.t('...')` on one line, in single quotes, without
+apostrophes: the extraction reads them literally.
+
+By hand, before a release, in a profile that has no `brok` on its `PATH` (for example
+`PATH=/usr/bin:/bin code ...`): the first-use prompt should appear, **Download** should show progress and end
+with a working status bar, and **Cancel** should leave nothing behind. With a `brok` installed, none of that
+should appear and the extension must use yours.
+
+Releases: the Promote workflow opens the `staging` to `main` PR; after it merges, tag `vX.Y.Z` (matching
+`package.json`) on `main` and the Release workflow packages, attaches the VSIX and publishes. Setup of the
+publishing accounts is in the brok repository, `docs/publishing.md`.
+
 Contributor and agent guide: [AGENTS.md](AGENTS.md).
 
 ## License
