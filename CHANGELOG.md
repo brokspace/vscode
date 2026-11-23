@@ -6,8 +6,15 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-23
+
+### Changed
+
+- Clearer Marketplace listing: a descriptive name ("Brokspace: Local AI Code Search & Memory"), description, keywords, a search demo and an FAQ in the README. The extension id is unchanged.
+
 ### Fixed
 
+- The README logo showed as raw HTML tags on the Visual Studio Marketplace; it is now a plain image.
 - Search results were hidden whenever the words you typed did not match a result's label, which is most natural-language queries. brok ranks the results, and they are now always shown.
 
 ## [0.1.0] - 2026-11-23

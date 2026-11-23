@@ -1,8 +1,5 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset=".github/brokspace-on-dark.png">
-    <img src=".github/brokspace.png" alt="Brokspace" height="88">
-  </picture>
+  <img src=".github/brokspace-banner.png" alt="Brokspace" width="500">
 </p>
 <p align="center"><b>Brokspace for VS Code: your workspace, understood.</b></p>
 
