@@ -122,11 +122,11 @@ Run what CI runs before every push:
 npm run lint && npm run typecheck && npm run l10n:check && npm run test:unit
 ```
 
-| Command | What it checks |
-|---|---|
-| `npm run test:unit` | Pure logic with `node:test`: brok's JSON, the downloader, search, formatting. Fast, no editor. |
+| Command                    | What it checks                                                                                                                                                                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run test:unit`        | Pure logic with `node:test`: brok's JSON, the downloader, search, formatting. Fast, no editor.                                                                                          |
 | `npm run test:integration` | The extension inside a downloaded VS Code (needs a display; use `xvfb-run` on a headless Linux). Set `BROK_TEST_PATH=/path/to/brok` to also run the test that sets up a real workspace. |
-| `npm run l10n:check` | Every user-visible string has a Portuguese translation (`npm run l10n:check -- --write` extracts new ones). |
+| `npm run l10n:check`       | Every user-visible string has a Portuguese translation (`npm run l10n:check -- --write` extracts new ones).                                                                             |
 
 New or changed strings go through `vscode.l10n.t('...')` on one line, in single quotes, without
 apostrophes: the extraction reads them literally.
