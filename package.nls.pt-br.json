@@ -53,5 +53,6 @@
   "config.brokPath": "Caminho do executável `brok`. Vazio: a pasta do instalador, a do Cargo, a do Homebrew e depois o `PATH`.",
   "config.mcp": "Oferecer o `brok mcp` (busca e memória do Brokspace) à IA e ao modo agente do editor. Ignorado quando o `.vscode/mcp.json` já o declara.",
   "config.saveSessions": "Salvar cada chat do Brokspace como uma memória, para os próximos partirem dele (também `memory.sessions` no `brok.yml`).",
-  "config.statusBar": "Mostrar o estado e o modelo do Brokspace na barra de status."
+  "config.statusBar": "Mostrar o estado e o modelo do Brokspace na barra de status.",
+  "cmd.installBrok": "Baixar e Instalar o brok"
 }

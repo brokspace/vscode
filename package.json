@@ -4,7 +4,7 @@
   "description": "%description%",
   "version": "0.1.0",
   "publisher": "brokspace",
-  "license": "(MIT OR Apache-2.0)",
+  "license": "MIT OR Apache-2.0",
   "icon": "media/icon.png",
   "homepage": "https://brokspace.org",
   "repository": {
@@ -303,6 +303,11 @@
       {
         "command": "brokspace.installHelp",
         "title": "%cmd.installHelp%",
+        "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.installBrok",
+        "title": "%cmd.installBrok%",
         "category": "Brokspace"
       }
     ],

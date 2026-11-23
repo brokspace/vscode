@@ -32,10 +32,26 @@ Desktop, VSCodium. English and Brazilian Portuguese.
 ## Requirements
 
 - [brok](https://brokspace.org/docs/getting-started) 0.4.0 or newer. The extension finds
-  it on the `PATH`, in the usual install locations, or at `brokspace.brokPath`.
+  it at `brokspace.brokPath`, in `BROK_PATH`, in the usual install locations, or on the `PATH`.
+  If it finds none, it offers to download it (see below).
 - For answers, reviews and commit messages: an LLM brok can reach (Ollama or
   any OpenAI-compatible provider) and the `brok-agent` shard. **Brokspace:
   Set Up Workspace** walks you through it.
+
+### Download on first use
+
+If brok is not installed, the extension asks before doing anything. Say **Download** and it:
+
+- downloads the `brok` executable for your platform from the
+  [brokspace/brok GitHub releases](https://github.com/brokspace/brok/releases) (about 150 to 220 MB; no other host);
+- checks it against the SHA-256 published next to it, and installs nothing if it does not match;
+- keeps it in the extension's own storage folder: no administrator rights, no change to your `PATH`.
+
+It never replaces a brok you already have: `brokspace.brokPath`, `BROK_PATH`, the usual install folders and
+the `PATH` all win over the downloaded copy. Run **Brokspace: Download and Install brok** to do it later, and
+remove it by uninstalling the extension. The download is a convenience, not a substitute for your package
+manager: `brew install brokspace/brok/brok`, APT or the release binary keep working and update brok on their own.
+This is the only network access the extension itself makes; everything else goes through brok.
 
 ## Getting started
 
