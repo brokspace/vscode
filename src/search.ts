@@ -48,10 +48,10 @@ export async function searchWorkspace(model: BrokspaceModel, initial?: string): 
             }
             pick.items = hits.length
                 ? hits.map((hit) => hitItem(hit))
-                : [{ label: t('No results. Try other words, or check that the index is up to date.') }];
+                : [{ label: t('No results. Try other words, or check that the index is up to date.'), alwaysShow: true }];
         } catch (error) {
             if (current === generation) {
-                pick.items = [{ label: `$(error) ${message(error)}` }];
+                pick.items = [{ label: `$(error) ${message(error)}`, alwaysShow: true }];
             }
         } finally {
             if (current === generation) {
@@ -95,6 +95,8 @@ function hitItem(hit: SearchHit): HitItem {
         description: `${hit.path}:${hit.start_line}${linked ? ` · ${hit.partition}` : ''}`,
         detail: firstLine(hit.content),
         hit,
+        // brok ranks the hits: the editor's own filter, which compares the typed words with the label, must not hide them.
+        alwaysShow: true,
         buttons: [{ iconPath: new vscode.ThemeIcon('go-to-file'), tooltip: t('Open to the side') }],
     };
 }
