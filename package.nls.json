@@ -1,5 +1,5 @@
 {
-  "description": "Your workspace, understood: search by meaning, answers from your own LLM with sources, memory that lasts, and linked workspaces, through the local-first brok CLI.",
+  "description": "Local-first AI code search, chat and memory for your whole workspace. Search by meaning across repositories, get answers from your own LLM with sources, and share context with MCP agents.",
   "view.overview": "Overview",
   "view.memory": "Memory",
   "view.links": "Linked Workspaces",

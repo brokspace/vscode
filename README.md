@@ -12,8 +12,8 @@ used, review your changes, write commit messages, and keep a memory of
 decisions that lasts across sessions and workspaces. Everything runs locally
 through [brok](https://github.com/brokspace/brok).
 
-Works in VS Code 1.90+ and the editors built on it: Cursor, Windsurf, Devin
-Desktop, VSCodium. English and Brazilian Portuguese.
+Runs in VS Code 1.90+ and is designed to install in editors based on it (see [Editors](#editors)).
+English and Brazilian Portuguese.
 
 ## What's inside
 
@@ -53,6 +53,13 @@ remove it by uninstalling the extension. The download is a convenience, not a su
 manager: `brew install brokspace/brok/brok`, APT or the release binary keep working and update brok on their own.
 This is the only network access the extension itself makes; everything else goes through brok.
 
+## Why Brokspace
+
+- **Your LLM, your machine.** Ollama or any OpenAI-compatible provider; nothing is sent anywhere you did not configure.
+- **Across repositories.** One search over a folder of several repositories and the ones you link, not one file at a time.
+- **Memory that lasts.** Decisions and conventions survive across sessions, and the same index and memory serve your terminal and your coding agents through MCP.
+- **Open source.** MIT or Apache-2.0, and no account.
+
 ## Getting started
 
 1. Install brok, then this extension.
@@ -76,6 +83,14 @@ diagnostics (secrets masked) in the right repository.
 
 Everything else (the model, providers, memory, linked workspaces) lives in
 `.brokspace/brok.yml`, so the CLI, the extension and your agents share it.
+
+## FAQ
+
+**Does my code leave my machine?** Not through the extension. Search and memory are local; answers go to the LLM you configured, which can be a local one. The only network access the extension makes itself is the optional brok download.
+
+**Do I need to install anything else?** The `brok` CLI. If it is missing the extension offers to download it, or install it with Homebrew, APT or the release binary.
+
+**It does not find my project.** Run **Brokspace: Set Up Workspace**, then check **Brokspace: Diagnostics**; report problems at [github.com/brokspace/vscode/issues](https://github.com/brokspace/vscode/issues).
 
 ## Editors
 
