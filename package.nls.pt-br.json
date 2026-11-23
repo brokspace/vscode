@@ -1,5 +1,5 @@
 {
-  "description": "Seu workspace, compreendido: busca por significado, respostas do seu próprio LLM com fontes, memória que fica e workspaces vinculados, pela CLI local brok.",
+  "description": "Busca, chat e memória de código com IA, local-first, para todo o seu workspace. Busque por significado em vários repositórios, receba respostas do seu próprio LLM com fontes e compartilhe contexto com agentes MCP.",
   "view.overview": "Visão Geral",
   "view.memory": "Memória",
   "view.links": "Workspaces Vinculados",
