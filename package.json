@@ -1,6 +1,6 @@
 {
   "name": "brokspace",
-  "displayName": "Brokspace",
+  "displayName": "Brokspace: Local AI Code Search & Memory",
   "description": "%description%",
   "version": "0.1.0",
   "publisher": "brokspace",
@@ -27,13 +27,28 @@
   "keywords": [
     "brokspace",
     "brok",
+    "ai",
     "semantic search",
     "code search",
+    "codebase search",
+    "code context",
     "local llm",
     "ollama",
+    "llm",
     "memory",
+    "knowledge base",
     "mcp",
-    "rag"
+    "mcp server",
+    "rag",
+    "embeddings",
+    "agents",
+    "claude",
+    "local-first",
+    "offline",
+    "multi-repo",
+    "monorepo",
+    "code review",
+    "commit message"
   ],
   "engines": {
     "vscode": "^1.90.0"
