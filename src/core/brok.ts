@@ -32,9 +32,10 @@ const MAX_BUFFER = 32 * 1024 * 1024;
 
 /**
  * Finds `brok`: the configured path, `BROK_PATH`, then the usual install
- * folders (the installer's, Cargo's, Homebrew's), then `PATH`.
+ * folders (the installer's, Cargo's, Homebrew's), then `PATH`, and last the
+ * copy the extension downloaded (`managed`), so it never hides an install.
  */
-export function resolveBrok(configured: string | undefined, env: NodeJS.ProcessEnv = process.env): string {
+export function resolveBrok(configured: string | undefined, env: NodeJS.ProcessEnv = process.env, managed?: string): string {
     if (configured?.trim()) {
         return configured.trim();
     }
@@ -54,7 +55,16 @@ export function resolveBrok(configured: string | undefined, env: NodeJS.ProcessE
                   '/opt/homebrew/bin/brok',
                   '/usr/local/bin/brok',
               ];
-    return candidates.find((candidate) => fs.existsSync(candidate)) ?? 'brok';
+    const existing = candidates.find((candidate) => fs.existsSync(candidate));
+    if (existing) {
+        return existing;
+    }
+    // An install of the user's own, on PATH, always wins over the one the extension downloaded.
+    const pathDirs = (env.PATH ?? env.Path ?? '').split(path.delimiter).filter(Boolean);
+    if (!managed || pathDirs.some((dir) => fs.existsSync(path.join(dir, EXE)))) {
+        return 'brok';
+    }
+    return fs.existsSync(managed) ? managed : 'brok';
 }
 
 /**
