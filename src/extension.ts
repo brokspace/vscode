@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { registerChatParticipant } from './chat';
 import { message } from './core/brok';
+import { assetName, installBrok, RELEASES } from './core/installer';
 import { type BugInput, type Memory, type MemoryKind, type MemoryScope, MINIMUM_BROK_VERSION } from './core/protocol';
 import { lastLines } from './core/text';
 import { MemoryStore } from './memory';
@@ -25,7 +26,7 @@ export interface BrokspaceApi {
 }
 
 export function activate(context: vscode.ExtensionContext): BrokspaceApi {
-    const model = new BrokspaceModel();
+    const model = new BrokspaceModel(context.globalStorageUri.fsPath);
     const memory = new MemoryStore(model);
     const settings = new SettingsPanel(context, model, memory);
     const chat = new ChatPanel(context, model, memory);
@@ -372,7 +373,86 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     register('brokspace.refresh', () => model.refresh());
     register('brokspace.installHelp', () => vscode.env.openExternal(vscode.Uri.parse(INSTALL_URL)));
 
-    void model.refresh();
+    // Download brok on first use, only with the user's consent and never over an existing install.
+    let installing: Promise<boolean> | undefined;
+    const installBrokCommand = (): Promise<boolean> => {
+        installing ??= (async () => {
+            const asset = assetName();
+            if (!asset) {
+                void vscode.window.showWarningMessage(
+                    t('There is no brok download for this platform. Install it by hand: {0}', INSTALL_URL),
+                );
+                return false;
+            }
+            const confirm = t('Download');
+            const answer = await vscode.window.showInformationMessage(
+                t(
+                    'Brokspace needs the brok command line tool. Download it from {0} (about 150 to 220 MB)? It is checked against its published SHA-256, kept in the extension storage folder and needs no administrator rights.',
+                    RELEASES,
+                ),
+                { modal: true },
+                confirm,
+            );
+            if (answer !== confirm) {
+                return false;
+            }
+            try {
+                const installed = await vscode.window.withProgress(
+                    { location: vscode.ProgressLocation.Notification, title: t('Downloading brok'), cancellable: true },
+                    async (progress, token) => {
+                        const abort = new AbortController();
+                        token.onCancellationRequested(() => abort.abort());
+                        let last = 0;
+                        return installBrok({
+                            storageDir: context.globalStorageUri.fsPath,
+                            signal: abort.signal,
+                            onProgress: (received, total) => {
+                                if (!total) {
+                                    return;
+                                }
+                                const percent = Math.floor((received / total) * 100);
+                                progress.report({ increment: percent - last, message: `${percent}%` });
+                                last = percent;
+                            },
+                        });
+                    },
+                );
+                void vscode.window.showInformationMessage(t('brok {0} installed.', installed.tag));
+                await model.reloadBrok();
+                return true;
+            } catch (error) {
+                if (!(error instanceof Error && error.name === 'AbortError')) {
+                    void vscode.window.showErrorMessage(t('Could not install brok: {0}', message(error)));
+                }
+                return false;
+            }
+        })().finally(() => {
+            installing = undefined;
+        });
+        return installing;
+    };
+    register('brokspace.installBrok', installBrokCommand);
+
+    void model.refresh().then(async (state) => {
+        if (state.kind !== 'no-brok' || context.globalState.get<boolean>('brokspace.skipInstallPrompt')) {
+            return;
+        }
+        const install = t('Install brok');
+        const never = t('Do not ask again');
+        const choice = await vscode.window.showInformationMessage(
+            t('Brokspace needs the brok command line tool, which was not found.'),
+            install,
+            t('Install guide'),
+            never,
+        );
+        if (choice === install) {
+            await installBrokCommand();
+        } else if (choice === never) {
+            await context.globalState.update('brokspace.skipInstallPrompt', true);
+        } else if (choice) {
+            await vscode.env.openExternal(vscode.Uri.parse(INSTALL_URL));
+        }
+    });
     return { state: () => model.state.kind };
 }
 
@@ -449,7 +529,8 @@ function statusBar(model: BrokspaceModel): vscode.Disposable {
                 break;
             case 'no-brok':
                 item.text = `$(warning) ${t('brok not found')}`;
-                item.tooltip = t('Install brok to use Brokspace.');
+                item.tooltip = t('Install brok to use Brokspace. Click for the options.');
+                item.command = 'brokspace.installBrok';
                 item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
                 break;
             case 'outdated':

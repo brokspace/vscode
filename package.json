@@ -304,6 +304,11 @@
         "command": "brokspace.installHelp",
         "title": "%cmd.installHelp%",
         "category": "Brokspace"
+      },
+      {
+        "command": "brokspace.installBrok",
+        "title": "%cmd.installBrok%",
+        "category": "Brokspace"
       }
     ],
     "menus": {

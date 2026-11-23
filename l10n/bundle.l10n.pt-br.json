@@ -93,7 +93,6 @@
   "Indexing": "Indexação",
   "Install": "Instalar",
   "Install a shard: a git URL or a local folder. Its permissions are listed in the output.": "Instale um shard: uma URL git ou uma pasta local. As permissões dele aparecem na saída.",
-  "Install brok to use Brokspace.": "Instale o brok para usar o Brokspace.",
   "Install {0}? A shard runs on your machine with the permissions its shard.json declares.": "Instalar {0}? Um shard roda na sua máquina com as permissões que o shard.json dele declara.",
   "Installing {0}": "Instalando {0}",
   "Is your LLM running? Start Ollama or LM Studio, then run \"Brokspace: Diagnostics\".": "Seu LLM está rodando? Inicie o Ollama ou o LM Studio e depois rode \"Brokspace: Diagnóstico\".",
@@ -297,5 +296,16 @@
   "{0} searches found nothing": "{0} buscas sem resultado",
   "{0} to look at": "{0} para olhar",
   "{0}d": "{0}d",
-  "{0}w": "{0} sem"
+  "{0}w": "{0} sem",
+  "There is no brok download for this platform. Install it by hand: {0}": "Não há download do brok para esta plataforma. Instale manualmente: {0}",
+  "Download": "Baixar",
+  "Downloading brok": "Baixando o brok",
+  "brok {0} installed.": "brok {0} instalado.",
+  "Could not install brok: {0}": "Não foi possível instalar o brok: {0}",
+  "Install brok": "Instalar o brok",
+  "Brokspace needs the brok command line tool, which was not found.": "O Brokspace precisa da ferramenta de linha de comando brok, que não foi encontrada.",
+  "Install guide": "Guia de instalação",
+  "Install brok to use Brokspace. Click for the options.": "Instale o brok para usar o Brokspace. Clique para ver as opções.",
+  "Do not ask again": "Não perguntar novamente",
+  "Brokspace needs the brok command line tool. Download it from {0} (about 150 to 220 MB)? It is checked against its published SHA-256, kept in the extension storage folder and needs no administrator rights.": "O Brokspace precisa da ferramenta de linha de comando brok. Baixá-la de {0} (cerca de 150 a 220 MB)? Ela é conferida com o SHA-256 publicado, fica na pasta de armazenamento da extensão e não exige permissão de administrador."
 }

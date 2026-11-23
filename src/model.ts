@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode';
 import { Brok, isAtLeast, message, resolveBrok } from './core/brok';
+import { managedExecutable } from './core/installer';
 import { type BrokInfo, MINIMUM_BROK_VERSION } from './core/protocol';
 import type { BrokspaceState } from './webview-protocol';
 
@@ -30,16 +31,14 @@ export class BrokspaceModel implements vscode.Disposable {
     protected refreshing: Promise<BrokspaceState> | undefined;
     protected refreshedAt = 0;
 
-    constructor() {
-        this._brok = new Brok(resolveBrok(vscode.workspace.getConfiguration('brokspace').get<string>('brokPath')));
+    /** @param storageDir where the extension keeps a brok it downloaded (last in the search order). */
+    constructor(protected readonly storageDir?: string) {
+        this._brok = this.createBrok();
         this.disposables.push(
             vscode.workspace.onDidChangeWorkspaceFolders(() => this.refresh()),
             vscode.workspace.onDidChangeConfiguration((e) => {
                 if (e.affectsConfiguration('brokspace.brokPath')) {
-                    this._brok.dispose();
-                    this._brok = new Brok(resolveBrok(vscode.workspace.getConfiguration('brokspace').get<string>('brokPath')));
-                    this.info = undefined;
-                    this.refresh();
+                    this.reloadBrok();
                 }
             }),
             vscode.window.onDidChangeWindowState((window) => {
@@ -55,6 +54,19 @@ export class BrokspaceModel implements vscode.Disposable {
         }, REFRESH_INTERVAL_MS);
         this.disposables.push({ dispose: () => clearInterval(timer) });
         this.setContext();
+    }
+
+    protected createBrok(): Brok {
+        const configured = vscode.workspace.getConfiguration('brokspace').get<string>('brokPath');
+        return new Brok(resolveBrok(configured, process.env, this.storageDir ? managedExecutable(this.storageDir) : undefined));
+    }
+
+    /** Looks for brok again (after an install, or when `brokspace.brokPath` changed). */
+    reloadBrok(): Promise<BrokspaceState> {
+        this._brok.dispose();
+        this._brok = this.createBrok();
+        this.info = undefined;
+        return this.refresh();
     }
 
     dispose(): void {
