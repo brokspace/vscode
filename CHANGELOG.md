@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-11-23
+
+### Changed
+
+- Clearer Marketplace listing: a descriptive name ("Brokspace: Local AI Code Search & Memory"), description, keywords, a search demo and an FAQ in the README. The extension id is unchanged.
+
 ### Fixed
 
 - Search results were hidden whenever the words you typed did not match a result's label, which is most natural-language queries. brok ranks the results, and they are now always shown.
