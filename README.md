@@ -99,10 +99,11 @@ Visual Studio Code is the supported and tested editor. The extension uses only t
 (`engines.vscode` is `^1.90.0`), so it is designed to install in editors based on VS Code, such as Cursor,
 Windsurf, Devin Desktop and VSCodium. That is a design goal, not a guarantee: we test in VS Code only, and a
 feature that needs an API a fork lacks (the `@brokspace` chat participant, MCP registration) is turned off
-while the rest keeps working. The Visual Studio Marketplace serves Microsoft's products; in other editors,
-install the `.vsix` from the [GitHub releases](https://github.com/brokspace/vscode/releases) with
-**Extensions: Install from VSIX**. Open VSX publishing is planned. Please report problems with the editor and
-its version.
+while the rest keeps working. The Visual Studio Marketplace serves Microsoft's products; editors that use
+[Open VSX](https://open-vsx.org/extension/brokspace/brokspace) (Cursor, Windsurf, VSCodium and others) can install
+`brokspace.brokspace` from their extensions view. Otherwise install the `.vsix` from the
+[GitHub releases](https://github.com/brokspace/vscode/releases) with **Extensions: Install from VSIX**. Please
+report problems with the editor and its version.
 
 ## Development
 
