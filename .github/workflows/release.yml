@@ -58,7 +58,8 @@ jobs:
           shopt -s nullglob
           files=(./*.vsix)
           [ "${#files[@]}" -eq 1 ] || { echo "::error::expected exactly one .vsix, found ${#files[@]}"; exit 1; }
-          npx vsce publish --packagePath "${files[0]}" --oidc
+          # --skip-duplicate: re-running a release (for example to add Open VSX) must not fail on a version already published.
+          npx vsce publish --packagePath "${files[0]}" --oidc --skip-duplicate
       - name: Open VSX
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
