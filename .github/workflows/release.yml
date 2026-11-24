@@ -5,8 +5,9 @@ name: Release
 #   Visual Studio Marketplace (publisher `brokspace`): Trusted Publishing (OIDC),
 #     no PAT. Needs the `marketplace-production` environment and a matching
 #     Trusted Publishing policy on the publisher (see docs/publishing.md).
-#   OVSX_PAT - Open VSX (namespace `brokspace`), used by Cursor, Windsurf and
-#     VSCodium; skipped when the secret is missing.
+#   Open VSX (namespace `brokspace`, used by Cursor, Windsurf and VSCodium):
+#     Trusted Publishing (OIDC), no PAT. The trusted publisher on open-vsx.org
+#     names this workflow file and the `marketplace-production` environment.
 
 on:
   push:
@@ -60,9 +61,5 @@ jobs:
           [ "${#files[@]}" -eq 1 ] || { echo "::error::expected exactly one .vsix, found ${#files[@]}"; exit 1; }
           # --skip-duplicate: re-running a release (for example to add Open VSX) must not fail on a version already published.
           npx vsce publish --packagePath "${files[0]}" --oidc --skip-duplicate
-      - name: Open VSX
-        env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: |
-          if [ -z "$OVSX_PAT" ]; then echo "::notice::OVSX_PAT not set; skipping Open VSX"; exit 0; fi
-          npx --yes ovsx publish ./*.vsix --pat "$OVSX_PAT"
+      - name: Open VSX (Trusted Publishing)
+        run: npx --yes ovsx publish ./*.vsix --trusted-publishing --skip-duplicate

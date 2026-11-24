@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Published to Open VSX (`brokspace.brokspace`) through Trusted Publishing, so Cursor, Windsurf, VSCodium and other Open VSX editors install it from their extensions view.
+
 ## [0.1.2] - 2026-11-24
 
 ### Changed
