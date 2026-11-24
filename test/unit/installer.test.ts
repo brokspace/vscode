@@ -7,7 +7,16 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import { resolveBrok } from '../../src/core/brok';
-import { assetName, assetUrl, type Fetch, installBrok, isReleaseTag, managedExecutable, parseChecksum } from '../../src/core/installer';
+import {
+    assetName,
+    assetUrl,
+    type Fetch,
+    installBrok,
+    isCompatibleTag,
+    isReleaseTag,
+    managedExecutable,
+    parseChecksum,
+} from '../../src/core/installer';
 
 const BODY = Buffer.from('#!/bin/sh\necho brok 0.5.0\n');
 const SHA = createHash('sha256').update(BODY).digest('hex');
@@ -60,6 +69,32 @@ describe('release assets', () => {
         assert.equal(parseChecksum(SHA), SHA);
         assert.throws(() => parseChecksum('<html>not found</html>'));
         assert.throws(() => parseChecksum(''));
+    });
+});
+
+describe('compatible versions', () => {
+    it('accepts brok 0.4.0 up to, not including, 1.0.0', () => {
+        for (const tag of ['v0.4.0', 'v0.5.0', 'v0.99.3']) {
+            assert.equal(isCompatibleTag(tag), true, tag);
+        }
+        for (const tag of ['v0.3.9', 'v1.0.0', 'v2.1.0', '0.5.0', 'v0.5']) {
+            assert.equal(isCompatibleTag(tag), false, tag);
+        }
+    });
+
+    it('explains and downloads nothing for a release it was not written for', async () => {
+        const github = fakeGithub();
+        await assert.rejects(
+            installBrok({
+                storageDir: fs.mkdtempSync(path.join(os.tmpdir(), 'brok-')),
+                tag: 'v1.0.0',
+                platform: 'linux',
+                arch: 'x64',
+                fetchFn: github.fetchFn,
+            }),
+            /outside the versions this extension supports.*Update the extension/,
+        );
+        assert.deepEqual(github.urls, []);
     });
 });
 

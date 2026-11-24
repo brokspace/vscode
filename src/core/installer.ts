@@ -5,6 +5,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { isAtLeast } from './brok';
+import { MINIMUM_BROK_VERSION, UNSUPPORTED_BROK_MAJOR } from './protocol';
 
 /** Where brok releases live. The only host the installer downloads from. */
 export const RELEASES = 'https://github.com/brokspace/brok/releases';
@@ -51,6 +53,15 @@ export function parseChecksum(text: string): string {
 /** Whether `tag` looks like a release tag (`v1.2.3`); anything else is refused before it reaches a URL. */
 export function isReleaseTag(tag: string): boolean {
     return /^v\d+\.\d+\.\d+$/.test(tag);
+}
+
+/** Whether the extension is written for this brok release: at least the minimum, below the next major. */
+export function isCompatibleTag(tag: string): boolean {
+    if (!isReleaseTag(tag)) {
+        return false;
+    }
+    const version = tag.slice(1);
+    return isAtLeast(version, MINIMUM_BROK_VERSION) && Number(version.split('.')[0]) < UNSUPPORTED_BROK_MAJOR;
 }
 
 export type Fetch = (url: string, init?: { headers?: Record<string, string>; signal?: AbortSignal }) => Promise<Response>;
@@ -106,6 +117,11 @@ export async function installBrok(options: InstallOptions): Promise<Installed> {
     const tag = options.tag ?? (await latestTag(fetchFn, options.signal));
     if (!isReleaseTag(tag)) {
         throw new Error(`"${tag}" is not a release tag`);
+    }
+    if (!isCompatibleTag(tag)) {
+        throw new Error(
+            `brok ${tag.slice(1)} is outside the versions this extension supports (${MINIMUM_BROK_VERSION} up to, not including, ${UNSUPPORTED_BROK_MAJOR}.0.0). Update the extension, or install brok yourself and set brokspace.brokPath.`,
+        );
     }
 
     const checksumResponse = await fetchFn(assetUrl(tag, `${asset}.sha256`), { signal: options.signal });
