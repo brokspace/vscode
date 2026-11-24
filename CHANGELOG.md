@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The downloaded brok must be between 0.4.0 and below 1.0.0: a release outside that range is explained and not downloaded, instead of installing a brok the extension was not written for (brokspace/vscode#19).
+
 ## [0.1.1] - 2026-11-23
 
 ### Changed

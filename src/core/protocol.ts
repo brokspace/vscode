@@ -7,6 +7,8 @@
 
 /** Oldest brok with the JSON output the extension relies on (doctor, stats and bug reports). */
 export const MINIMUM_BROK_VERSION = '0.4.0';
+/** The first brok major this extension has not been written for; a download never goes there. */
+export const UNSUPPORTED_BROK_MAJOR = 1;
 
 export interface BrokInfo {
     /** Whether a working `brok` was found. */
