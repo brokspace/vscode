@@ -943,3 +943,16 @@ body.vscode-high-contrast-light .bk-workspace-tab-on {
     background: var(--vscode-menu-selectionBackground, var(--vscode-list-hoverBackground));
     color: var(--vscode-menu-selectionForeground, inherit);
 }
+
+/* The header gives the folder name room first and the model what is left. */
+.bk-chat-head .bk-chat-title {
+    flex: 0 1 auto;
+    max-width: 50%;
+}
+.bk-chat-head .bk-chat-model {
+    flex: 1 1 0;
+    text-align: left;
+}
+.bk-chat-head .bk-spacer {
+    display: none;
+}
