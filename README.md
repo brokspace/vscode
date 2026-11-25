@@ -159,7 +159,7 @@ Releases: the Promote workflow opens the `staging` to `main` PR; after it merges
 `package.json`) on `main` and the Release workflow packages, attaches the VSIX and publishes. Setup of the
 publishing accounts is in the brok repository, `docs/publishing.md`.
 
-Contributor and agent guide: [AGENTS.md](AGENTS.md).
+Contributor and agent guide: [AGENTS.md](AGENTS.md). UI tokens, components and accessibility rules: [docs/design-system.md](docs/design-system.md).
 
 ## License
 

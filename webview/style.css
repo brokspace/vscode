@@ -788,3 +788,110 @@ body.page-settings #root {
     background: var(--vscode-button-secondaryBackground);
     color: var(--vscode-button-secondaryForeground);
 }
+
+/* ---------------------------------------------------------------- accessibility baseline
+   One focus ring for everything that takes the keyboard, motion that follows
+   the system preference, borders where a high-contrast theme needs them, and
+   a layout that holds in a narrow sidebar. See docs/design-system.md. */
+
+:root {
+    --bk-focus: var(--vscode-focusBorder);
+    --bk-border: var(--vscode-widget-border, var(--vscode-panel-border, transparent));
+    --bk-motion: 120ms;
+}
+
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--bk-focus);
+    outline-offset: 1px;
+}
+
+/* Text boxes show focus on their own frame, not twice. */
+.bk-chat-input textarea:focus-visible {
+    outline: none;
+}
+
+.bk-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* The chip, card and button edges a high-contrast theme draws. */
+body.vscode-high-contrast .bk-onboarding,
+body.vscode-high-contrast-light .bk-onboarding,
+body.vscode-high-contrast .bk-button,
+body.vscode-high-contrast-light .bk-button,
+body.vscode-high-contrast .bk-suggestion,
+body.vscode-high-contrast-light .bk-suggestion {
+    border: 1px solid var(--vscode-contrastBorder, var(--vscode-focusBorder));
+}
+
+body.vscode-high-contrast .bk-workspace-tab-on,
+body.vscode-high-contrast-light .bk-workspace-tab-on {
+    border-bottom-width: 3px;
+}
+
+@media (forced-colors: active) {
+    .bk-icon-button,
+    .bk-workspace-tab,
+    .bk-suggestion {
+        border: 1px solid ButtonText;
+        forced-color-adjust: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    /* A spinner that stops is still a status: keep a static glyph. */
+    .codicon-modifier-spin {
+        animation: none !important;
+    }
+}
+
+/* A narrow sidebar: the tabs keep their icons and lose their words (the names
+   stay for screen readers), buttons wrap, and indents shrink. */
+.bk-workspace,
+.bk-chat {
+    container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+    .bk-workspace-tab {
+        padding: var(--bk-space-1);
+        font-size: 0;
+    }
+    .bk-workspace-tab .codicon {
+        font-size: var(--bk-icon);
+    }
+    .bk-guide-body {
+        margin-left: 0;
+    }
+    .bk-onboarding {
+        padding: var(--bk-space-2);
+    }
+    .bk-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* A wide editor tab keeps lines readable instead of stretching across the screen. */
+@container (min-width: 900px) {
+    .bk-chat-log {
+        max-width: 90ch;
+        margin-inline: auto;
+    }
+}
