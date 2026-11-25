@@ -6,6 +6,14 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-25
+
+### Added
+
+- Polish the chat header, composer and message footer (#68)
+- Attach open tabs and folders and honor index.exclude (#66)
+- Add a navigation menu and the workspace to the chat header (#65)
+
 ## [0.4.0] - 2026-11-25
 
 ### Added
