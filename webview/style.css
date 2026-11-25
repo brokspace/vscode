@@ -711,3 +711,80 @@ body.page-settings #root {
     list-style: none;
     overflow-wrap: anywhere;
 }
+
+/* Guided first run */
+.bk-onboarding {
+    margin: 8px 0 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+    border-radius: 6px;
+    background: var(--vscode-editorWidget-background);
+}
+.bk-onboarding-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.bk-onboarding-head h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.1em;
+}
+.bk-onboarding-count,
+.bk-onboarding-hint,
+.bk-guide-state {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+.bk-onboarding-bar {
+    width: 100%;
+    height: 4px;
+    margin: 6px 0 10px;
+}
+.bk-onboarding-sub {
+    margin: 12px 0 4px;
+    font-size: 0.95em;
+}
+.bk-guides {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.bk-guide {
+    padding: 4px 0;
+}
+.bk-guide-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.bk-guide-title {
+    flex: 1;
+}
+.bk-guide-done .codicon {
+    color: var(--vscode-testing-iconPassed, var(--vscode-charts-green));
+}
+.bk-guide-current .codicon {
+    color: var(--vscode-focusBorder);
+}
+.bk-guide-current .bk-guide-title {
+    font-weight: 600;
+}
+.bk-guide-skipped .bk-guide-title {
+    color: var(--vscode-descriptionForeground);
+}
+.bk-guide-body {
+    margin: 4px 0 6px 22px;
+}
+.bk-guide-body p {
+    margin: 0 0 6px;
+}
+.bk-onboarding .bk-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.bk-button-secondary {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}

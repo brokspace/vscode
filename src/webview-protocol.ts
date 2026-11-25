@@ -7,6 +7,7 @@
  */
 
 import type { ActivityStep } from './core/activity';
+import type { Progress, StepId } from './core/onboarding';
 import type { BrokInfo, BrokStatus, BugInput, Memory, SourceRef } from './core/protocol';
 
 export type BrokspaceState =
@@ -76,7 +77,8 @@ export type HostMessage =
     | { type: 'chat/progress'; id: string; text: string }
     | { type: 'chat/chunk'; id: string; text: string }
     | { type: 'chat/steps'; id: string; steps: ActivityStep[] }
-    | { type: 'chat/done'; turn: ChatTurn };
+    | { type: 'chat/done'; turn: ChatTurn }
+    | { type: 'onboarding/state'; progress: Progress; mcpEnabled: boolean; busy?: 'setup' };
 
 export type WebviewMessage =
     | { type: 'ready' }
@@ -90,4 +92,9 @@ export type WebviewMessage =
     | { type: 'context/remove'; id: string }
     | { type: 'context/pin'; id: string }
     | { type: 'chat/cancel' }
-    | { type: 'chat/new' };
+    | { type: 'chat/new' }
+    | { type: 'onboarding/acknowledge' }
+    | { type: 'onboarding/skip'; step: StepId }
+    | { type: 'onboarding/resume'; step: StepId }
+    | { type: 'onboarding/dismiss' }
+    | { type: 'onboarding/reopen' };

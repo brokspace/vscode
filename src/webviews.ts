@@ -9,6 +9,7 @@ import { Activity, ApprovalGate } from './core/activity';
 import { message } from './core/brok';
 import { type LocalCommand, parseLocalCommand } from './core/composer';
 import { type ContextItem, chipOf, contextTurns, MAX_TOTAL_CHARS, withinBudget } from './core/context';
+import { emptyProgress, type Progress, readProgress } from './core/onboarding';
 import type { BugInput } from './core/protocol';
 import {
     markInterrupted,
@@ -31,6 +32,7 @@ import type { ChatTurn, ContextSource, HostMessage, Page, SettingsSection, ShowO
 const t = vscode.l10n.t;
 
 const HISTORY_KEY = 'brokspace.chat.history';
+const ONBOARDING_KEY = 'brokspace.onboarding';
 
 /** Shared by both webviews: RPC with brok, commands, opening files and links. */
 abstract class BrokspaceWebview implements vscode.Disposable {
@@ -235,10 +237,12 @@ export class ChatPanel extends BrokspaceWebview {
     constructor(context: vscode.ExtensionContext, model: BrokspaceModel, memory: MemoryStore) {
         super(context, model, memory, 'chat', t('Brokspace Chat'));
         this.history = readHistory(context.workspaceState.get(HISTORY_KEY));
+        this.progress = readProgress(context.workspaceState.get(ONBOARDING_KEY));
         this.disposables.push(
             vscode.window.onDidChangeActiveTextEditor(() => this.postEditor()),
             vscode.window.onDidChangeTextEditorSelection(() => this.postEditor()),
             vscode.workspace.onDidChangeConfiguration((event) => event.affectsConfiguration('brokspace.chat') && this.postEditor()),
+            vscode.workspace.onDidChangeConfiguration((event) => event.affectsConfiguration('brokspace.mcp') && this.postOnboarding()),
         );
     }
 
@@ -252,6 +256,11 @@ export class ChatPanel extends BrokspaceWebview {
         const sendWith =
             vscode.workspace.getConfiguration('brokspace').get<string>('chat.sendWith') === 'ctrlEnter' ? 'ctrlEnter' : 'enter';
         this.post({ type: 'editor/state', file, selection: !!editor && !editor.selection.isEmpty && file !== undefined, sendWith });
+    }
+
+    /** Shows the guided first run again (**Brokspace: Get Started**). */
+    getStarted(): void {
+        this.updateProgress({ dismissed: false, skipped: [] });
     }
 
     /** Starts a new conversation (the command, the composer's button). */
@@ -294,6 +303,7 @@ export class ChatPanel extends BrokspaceWebview {
         this.sessionId = crypto.randomUUID();
         this.attached = [];
         this.post({ type: 'chat/state', turns: this.turns });
+        this.postOnboarding();
         this.postContext();
     }
 
@@ -399,6 +409,20 @@ export class ChatPanel extends BrokspaceWebview {
         this.postEditor();
     }
 
+    /** The guided first run: only the user's choices are stored, the rest comes from brok's state. */
+    protected progress: Progress = emptyProgress();
+
+    protected postOnboarding(): void {
+        const mcpEnabled = vscode.workspace.getConfiguration('brokspace').get<boolean>('mcp.enabled', true);
+        this.post({ type: 'onboarding/state', progress: this.progress, mcpEnabled });
+    }
+
+    protected updateProgress(patch: Partial<Progress>): void {
+        this.progress = { ...this.progress, ...patch };
+        void this.context.workspaceState.update(ONBOARDING_KEY, this.progress);
+        this.postOnboarding();
+    }
+
     /** Context attached to the conversation: shown as chips before anything is sent. */
     protected attached: ContextItem[] = [];
 
@@ -453,6 +477,21 @@ export class ChatPanel extends BrokspaceWebview {
                 return;
             case 'chat/new':
                 this.reset();
+                return;
+            case 'onboarding/acknowledge':
+                this.updateProgress({ acknowledged: true });
+                return;
+            case 'onboarding/skip':
+                this.updateProgress({ skipped: [...new Set([...this.progress.skipped, msg.step])] });
+                return;
+            case 'onboarding/resume':
+                this.updateProgress({ skipped: this.progress.skipped.filter((id) => id !== msg.step), dismissed: false });
+                return;
+            case 'onboarding/dismiss':
+                this.updateProgress({ dismissed: true });
+                return;
+            case 'onboarding/reopen':
+                this.updateProgress({ dismissed: false, skipped: [] });
                 return;
         }
     }
@@ -575,6 +614,9 @@ export class ChatPanel extends BrokspaceWebview {
             this.post({ type: 'chat/steps', id: turn.id, steps: structuredClone(activity.steps) });
             this.running = undefined;
             running.dispose();
+            if (turn.done && !turn.error && !turn.cancelled && !this.progress.firstAnswer) {
+                this.updateProgress({ firstAnswer: true });
+            }
             this.persist(sessionId, conversation);
             this.post({ type: 'chat/done', turn });
         }
