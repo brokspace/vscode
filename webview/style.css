@@ -233,6 +233,12 @@ body.page-settings #root {
 }
 
 .bk-chat-model {
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -439,4 +445,269 @@ body.page-settings #root {
 .bk-send:disabled {
     opacity: 0.4;
     cursor: default;
+}
+
+/* ------------------------------------------------------------ workspace
+   The sidebar: chat and settings as two tabs of one page. */
+
+.bk-workspace {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bk-workspace-nav {
+    display: flex;
+    gap: var(--bk-space-1);
+    padding: var(--bk-space-1) var(--bk-space-2) 0;
+    border-bottom: 1px solid var(--theia-widget-border, var(--vscode-panel-border, transparent));
+}
+
+.bk-workspace-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+    padding: var(--bk-space-1) var(--bk-space-2);
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--vscode-foreground);
+    font: inherit;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.bk-workspace-tab:hover,
+.bk-workspace-tab-on {
+    opacity: 1;
+}
+
+.bk-workspace-tab-on {
+    border-bottom-color: var(--vscode-focusBorder, currentColor);
+}
+
+.bk-workspace-tab:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+.bk-workspace-panel {
+    flex: 1;
+    min-height: 0;
+}
+
+.bk-workspace-panel[hidden] {
+    display: none;
+}
+
+.bk-workspace-settings {
+    container-type: inline-size;
+    overflow: auto;
+    line-height: var(--bk-line);
+}
+
+.bk-workspace-scroll {
+    overflow: auto;
+}
+
+.bk-history {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bk-space-2);
+    padding: var(--bk-space-3);
+}
+
+.bk-history-tools {
+    display: flex;
+    gap: var(--bk-space-2);
+}
+
+.bk-history-tools .bk-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.bk-history-note {
+    margin: 0;
+    color: var(--vscode-descriptionForeground);
+}
+
+.bk-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bk-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-history-item {
+    display: flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+}
+
+.bk-history-open {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--bk-space-1) var(--bk-space-2);
+    border: none;
+    border-radius: var(--bk-radius-sm);
+    background: none;
+    color: var(--vscode-foreground);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.bk-history-open:hover {
+    background: var(--vscode-list-hoverBackground);
+}
+
+.bk-history-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bk-history-meta {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+
+/* ------------------------------------------------------- attached context */
+
+.bk-context {
+    margin: 0 var(--bk-space-4) var(--bk-space-1);
+}
+
+.bk-context-add {
+    display: flex;
+    gap: var(--bk-space-1);
+}
+
+.bk-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bk-space-1);
+    margin: var(--bk-space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+    max-width: 100%;
+    padding: 0 var(--bk-space-1) 0 var(--bk-space-2);
+    border-radius: var(--bk-radius);
+    background: var(--vscode-badge-background);
+    color: var(--vscode-badge-foreground);
+    font-size: 0.9em;
+}
+
+.bk-chip-omitted {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.bk-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bk-chip-note {
+    font-style: italic;
+    opacity: 0.85;
+}
+
+.bk-turn-context {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+
+/* ------------------------------------------------------------ slash menu */
+
+.bk-slash {
+    margin: 0 var(--bk-space-4) var(--bk-space-1);
+    padding: var(--bk-space-1);
+    list-style: none;
+    max-height: 40vh;
+    overflow-y: auto;
+    border: 1px solid var(--vscode-editorSuggestWidget-border, var(--theia-widget-border));
+    border-radius: var(--bk-radius);
+    background: var(--vscode-editorSuggestWidget-background, var(--vscode-editor-background));
+}
+
+.bk-slash-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--bk-space-1) var(--bk-space-2);
+    border-radius: var(--bk-radius-sm);
+    cursor: pointer;
+}
+
+.bk-slash-item span {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+
+.bk-slash-on {
+    background: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
+}
+
+.bk-slash-on span {
+    color: inherit;
+}
+
+/* ------------------------------------------------------------- activity */
+
+.bk-activity {
+    margin: var(--bk-space-1) 0;
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+
+.bk-activity summary {
+    cursor: pointer;
+}
+
+.bk-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bk-space-1);
+    margin: var(--bk-space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-step {
+    display: flex;
+    gap: var(--bk-space-2);
+}
+
+.bk-step-body {
+    min-width: 0;
+}
+
+.bk-step-meta {
+    opacity: 0.85;
+}
+
+.bk-step-failed .bk-step-body,
+.bk-step-error {
+    color: var(--vscode-errorForeground);
+}
+
+.bk-step-resources {
+    margin: 0;
+    padding: 0 0 0 var(--bk-space-2);
+    list-style: none;
+    overflow-wrap: anywhere;
 }

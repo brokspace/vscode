@@ -2,7 +2,7 @@
   "name": "brokspace",
   "displayName": "Brokspace: Local AI Code Search & Memory",
   "description": "%description%",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "brokspace",
   "license": "MIT OR Apache-2.0",
   "icon": "media/icon.png",
@@ -167,6 +167,18 @@
         "title": "%cmd.openChat%",
         "category": "Brokspace",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "brokspace.newChat",
+        "title": "%cmd.newChat%",
+        "category": "Brokspace",
+        "icon": "$(add)"
+      },
+      {
+        "command": "brokspace.stopChat",
+        "title": "%cmd.stopChat%",
+        "category": "Brokspace",
+        "icon": "$(debug-stop)"
       },
       {
         "command": "brokspace.openChatInEditor",
@@ -453,6 +465,12 @@
         "mac": "cmd+shift+alt+b"
       },
       {
+        "command": "brokspace.newChat",
+        "key": "ctrl+alt+n",
+        "mac": "cmd+alt+n",
+        "when": "focusedView == brokspace.chat || activeWebviewPanelId == brokspace.chat"
+      },
+      {
         "command": "brokspace.remember",
         "key": "ctrl+alt+m",
         "mac": "cmd+alt+m",
@@ -520,6 +538,19 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "%config.mcp%"
+        },
+        "brokspace.chat.sendWith": {
+          "type": "string",
+          "enum": [
+            "enter",
+            "ctrlEnter"
+          ],
+          "enumDescriptions": [
+            "%config.sendWith.enter%",
+            "%config.sendWith.ctrlEnter%"
+          ],
+          "default": "enter",
+          "markdownDescription": "%config.sendWith%"
         },
         "brokspace.chat.saveSessions": {
           "type": "boolean",

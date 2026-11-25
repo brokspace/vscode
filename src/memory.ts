@@ -110,17 +110,20 @@ export class MemoryStore implements vscode.Disposable {
      * (`brokspace.chat.saveSessions`) or in brok.yml (`memory.sessions`).
      */
     async saveSession(sessionId: string, turns: SessionTurn[]): Promise<void> {
-        const status = this.model.ready?.status;
         const memory = sessionMemory(sessionId, turns);
-        if (
-            !memory ||
-            !status ||
-            status.memory?.enabled === false ||
-            status.memory?.sessions === false ||
-            !vscode.workspace.getConfiguration('brokspace').get<boolean>('chat.saveSessions', true)
-        ) {
+        if (!memory || !this.model.ready || !this.sessionsEnabled) {
             return;
         }
         await this.save(memory);
+    }
+
+    /** Whether chats are saved: on in `brokspace.chat.saveSessions` and not turned off by brok's `memory` settings. */
+    get sessionsEnabled(): boolean {
+        const memory = this.model.ready?.status.memory;
+        return (
+            memory?.enabled !== false &&
+            memory?.sessions !== false &&
+            vscode.workspace.getConfiguration('brokspace').get<boolean>('chat.saveSessions', true)
+        );
     }
 }
