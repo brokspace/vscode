@@ -505,3 +505,74 @@ body.page-settings #root {
     overflow: auto;
     line-height: var(--bk-line);
 }
+
+.bk-workspace-scroll {
+    overflow: auto;
+}
+
+.bk-history {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bk-space-2);
+    padding: var(--bk-space-3);
+}
+
+.bk-history-tools {
+    display: flex;
+    gap: var(--bk-space-2);
+}
+
+.bk-history-tools .bk-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.bk-history-note {
+    margin: 0;
+    color: var(--vscode-descriptionForeground);
+}
+
+.bk-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bk-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-history-item {
+    display: flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+}
+
+.bk-history-open {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    padding: var(--bk-space-1) var(--bk-space-2);
+    border: none;
+    border-radius: var(--bk-radius-sm);
+    background: none;
+    color: var(--vscode-foreground);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.bk-history-open:hover {
+    background: var(--vscode-list-hoverBackground);
+}
+
+.bk-history-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bk-history-meta {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}

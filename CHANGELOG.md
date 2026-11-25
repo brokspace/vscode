@@ -8,6 +8,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Conversation history: a History tab in the sidebar lists the chats of this workspace, with search over titles and messages, resume, rename, delete and clear history (with confirmation). Chats are kept in the workspace's own storage with their sources and model, an answer cut short by closing the window comes back as interrupted, and nothing is kept when `brokspace.chat.saveSessions` or brok's `memory.sessions` is off. They are separate from memories.
 - Settings live in the same sidebar: a Chat and Settings tab bar switches between them without losing the conversation or the draft. Clicking the model in the chat opens the Model settings.
 
 ## [0.2.0] - 2026-11-25
