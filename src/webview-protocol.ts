@@ -27,6 +27,22 @@ export interface ShowOptions {
     bug?: Partial<BugInput>;
 }
 
+/** One piece of attached context as the composer shows it (never its content). */
+export interface ContextChip {
+    id: string;
+    kind: 'file' | 'selection' | 'diagnostics';
+    label: string;
+    persistent: boolean;
+    chars: number;
+    truncated: boolean;
+    redactions: number;
+    external: boolean;
+    /** Left out of the next question: the total budget is used up. */
+    omitted: boolean;
+}
+
+export type ContextSource = 'file' | 'selection' | 'pick' | 'diagnostics';
+
 /** One question of the chat panel and its answer. */
 export interface ChatTurn {
     id: string;
@@ -41,6 +57,8 @@ export interface ChatTurn {
     done?: boolean;
     cancelled?: boolean;
     error?: string;
+    /** What was attached to this question. */
+    context?: string[];
 }
 
 export type HostMessage =
@@ -48,6 +66,7 @@ export type HostMessage =
     | { type: 'memories'; memories: Memory[]; loaded: boolean; error?: string }
     | { type: 'rpc'; id: number; result?: unknown; error?: string }
     | { type: 'show'; section: SettingsSection; options: ShowOptions }
+    | { type: 'context/state'; items: ContextChip[]; limit: number }
     | { type: 'chat/state'; turns: ChatTurn[] }
     | { type: 'chat/turn'; turn: ChatTurn }
     | { type: 'chat/progress'; id: string; text: string }
@@ -62,5 +81,8 @@ export type WebviewMessage =
     | { type: 'openFile'; path: string }
     | { type: 'openExternal'; url: string }
     | { type: 'chat/send'; text: string }
+    | { type: 'context/add'; source: ContextSource }
+    | { type: 'context/remove'; id: string }
+    | { type: 'context/pin'; id: string }
     | { type: 'chat/cancel' }
     | { type: 'chat/new' };

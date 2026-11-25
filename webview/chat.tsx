@@ -3,7 +3,7 @@
 import MarkdownIt from 'markdown-it';
 import * as React from 'react';
 import { cite } from '../src/core/text';
-import type { ChatTurn, SettingsSection } from '../src/webview-protocol';
+import type { ChatTurn, ContextChip, ContextSource, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
 
 // No raw HTML from the model; links open outside (see `onClick`).
@@ -25,6 +25,7 @@ export function ChatApp({
     const [turns, setTurns] = React.useState<ChatTurn[]>([]);
     const [progress, setProgress] = React.useState<Record<string, string>>({});
     const [draft, setDraft] = React.useState('');
+    const [chips, setChips] = React.useState<{ items: ContextChip[]; limit: number }>({ items: [], limit: 0 });
     const [, setState] = React.useState(host.state);
     const end = React.useRef<HTMLDivElement>(null);
     const input = React.useRef<HTMLTextAreaElement>(null);
@@ -35,6 +36,9 @@ export function ChatApp({
                 switch (msg.type) {
                     case 'state':
                         setState(host.state);
+                        break;
+                    case 'context/state':
+                        setChips({ items: msg.items, limit: msg.limit });
                         break;
                     case 'chat/state':
                         setTurns(msg.turns);
@@ -140,6 +144,36 @@ export function ChatApp({
                 <div ref={end} />
             </main>
 
+            <div className="bk-context">
+                <div className="bk-context-add" role="group" aria-label={t('Attach context')}>
+                    {(
+                        [
+                            ['file', 'file-code', t('Attach the active file')],
+                            ['selection', 'list-selection', t('Attach the selected code')],
+                            ['pick', 'folder-opened', t('Pick files to attach')],
+                            ['diagnostics', 'warning', t('Attach the problems of the active file')],
+                        ] as [ContextSource, string, string][]
+                    ).map(([source, icon, label]) => (
+                        <button
+                            key={source}
+                            type="button"
+                            className={`bk-icon-button ${codicon(icon)}`}
+                            title={label}
+                            aria-label={label}
+                            disabled={!ready}
+                            onClick={() => host.post({ type: 'context/add', source })}
+                        />
+                    ))}
+                </div>
+                {chips.items.length > 0 && (
+                    <ul className="bk-chips" aria-label={t('Context for your next question')}>
+                        {chips.items.map((chip) => (
+                            <Chip key={chip.id} chip={chip} host={host} />
+                        ))}
+                    </ul>
+                )}
+            </div>
+
             <form
                 className="bk-chat-input"
                 onSubmit={(e) => {
@@ -189,6 +223,11 @@ function Turn({ turn, progress, host }: { turn: ChatTurn; progress?: string; hos
     return (
         <article className="bk-turn">
             <div className="bk-question">{turn.question}</div>
+            {turn.context && turn.context.length > 0 && (
+                <div className="bk-turn-context">
+                    <span className={codicon('attach')} /> {t('Context')}: {turn.context.join(', ')}
+                </div>
+            )}
             <div className="bk-answer">
                 {!turn.done && !turn.answer && (
                     <div className="bk-progress">
@@ -260,5 +299,44 @@ function Turn({ turn, progress, host }: { turn: ChatTurn; progress?: string; hos
                 {turn.done && turn.model && <div className="bk-turn-model">{turn.model}</div>}
             </div>
         </article>
+    );
+}
+
+/** One attached item: what it is, what was done to it, and how long it stays. */
+function Chip({ chip, host }: { chip: ContextChip; host: Host }): React.ReactElement {
+    const notes = [
+        chip.omitted ? t('left out: too much context') : undefined,
+        chip.truncated ? t('shortened') : undefined,
+        chip.redactions ? t('{0} secrets hidden', chip.redactions) : undefined,
+        chip.external ? t('outside the workspace') : undefined,
+    ].filter(Boolean);
+    const icon = chip.kind === 'selection' ? 'list-selection' : chip.kind === 'diagnostics' ? 'warning' : 'file-code';
+    return (
+        <li className={`bk-chip ${chip.omitted ? 'bk-chip-omitted' : ''}`}>
+            <span className={codicon(icon)} aria-hidden="true" />
+            <span className="bk-chip-label" title={chip.label}>
+                {chip.label}
+            </span>
+            {notes.length > 0 && <span className="bk-chip-note">{notes.join(', ')}</span>}
+            <button
+                type="button"
+                className={`bk-icon-button ${codicon(chip.persistent ? 'pinned' : 'pin')}`}
+                aria-pressed={chip.persistent}
+                title={
+                    chip.persistent
+                        ? t('Kept for the whole conversation: click to use it for the next question only')
+                        : t('Next question only: click to keep it for the whole conversation')
+                }
+                aria-label={`${chip.persistent ? t('Kept for the conversation') : t('Next question only')}: ${chip.label}`}
+                onClick={() => host.post({ type: 'context/pin', id: chip.id })}
+            />
+            <button
+                type="button"
+                className={`bk-icon-button ${codicon('close')}`}
+                title={t('Remove')}
+                aria-label={`${t('Remove')}: ${chip.label}`}
+                onClick={() => host.post({ type: 'context/remove', id: chip.id })}
+            />
+        </li>
     );
 }
