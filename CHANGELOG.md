@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-25
+
 ### Added
 
 - Activity under each answer: an expandable list of the steps the assistant took (attached context, searching the index, asking your model, running a skill, saving a note) with their state, duration and the files or memories each read or changed, and a label that says whether a step only reads, sends your question to your LLM, or changes something. A step cut short by closing the window shows as stopped. Saving a note with `/remember` is the one write today and goes through an approval gate (typing the command is the approval); the gate runs an action once, never repeats a succeeded one, and reports one cancelled mid-way as such.
