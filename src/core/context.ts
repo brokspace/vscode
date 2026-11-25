@@ -13,7 +13,7 @@ import type { ConversationTurn } from './protocol';
 export const MAX_ITEM_CHARS = 12_000;
 export const MAX_TOTAL_CHARS = 40_000;
 
-export type ContextKind = 'file' | 'selection' | 'diagnostics';
+export type ContextKind = 'file' | 'selection' | 'diagnostics' | 'diff';
 
 export interface ContextItem {
     id: string;
@@ -127,6 +127,28 @@ export function bound(text: string, max: number): { text: string; truncated: boo
     const cut = text.slice(0, max);
     const kept = cut.slice(0, Math.max(cut.lastIndexOf('\n'), max / 2));
     return { text: `${kept}\n… [${text.length - kept.length} more characters not attached]`, truncated: true };
+}
+
+/**
+ * A unified diff without the files `keep` refuses (credentials, ignored,
+ * excluded): split at each `diff --git`, so one refused file never hides the rest.
+ */
+export function filterDiff(diff: string, keep: (path: string) => boolean): { text: string; kept: string[]; dropped: string[] } {
+    const kept: string[] = [];
+    const dropped: string[] = [];
+    const parts = diff.split(/^(?=diff --git )/m).filter(Boolean);
+    const text = parts
+        .filter((part) => {
+            const path = /^diff --git a\/(.+?) b\/(.+)$/m.exec(part)?.[2];
+            if (!path) {
+                return false;
+            }
+            const ok = keep(path);
+            (ok ? kept : dropped).push(path);
+            return ok;
+        })
+        .join('');
+    return { text, kept, dropped };
 }
 
 /** An item from raw text: secrets hidden, then bounded. */

@@ -26,7 +26,7 @@ THEMES = {
         "button-background": "#0e639c", "button-foreground": "#ffffff", "button-hoverBackground": "#1177bb",
         "button-secondaryBackground": "#3a3d41", "button-secondaryForeground": "#ffffff",
         "list-hoverBackground": "#2a2d2e", "textLink-foreground": "#3794ff", "textCodeBlock-background": "#2b2b2b",
-        "toolbar-hoverBackground": "#5a5d5e50", "icon-foreground": "#c5c5c5", "testing-iconPassed": "#73c991",
+        "toolbar-hoverBackground": "#5a5d5e50", "badge-background": "#4d4d4d", "badge-foreground": "#ffffff", "input-placeholderForeground": "#a6a6a6", "icon-foreground": "#c5c5c5", "testing-iconPassed": "#73c991",
     }),
     "light": dict(cls="vscode-light", vars={
         "foreground": "#3b3b3b", "descriptionForeground": "#717171", "errorForeground": "#a1260d",
@@ -36,7 +36,7 @@ THEMES = {
         "button-background": "#005fb8", "button-foreground": "#ffffff", "button-hoverBackground": "#0258a8",
         "button-secondaryBackground": "#e5e5e5", "button-secondaryForeground": "#3b3b3b",
         "list-hoverBackground": "#e8e8e8", "textLink-foreground": "#005fb8", "textCodeBlock-background": "#f0f0f0",
-        "toolbar-hoverBackground": "#b8b8b850", "icon-foreground": "#3b3b3b", "testing-iconPassed": "#388a34",
+        "toolbar-hoverBackground": "#b8b8b850", "badge-background": "#c4c4c4", "badge-foreground": "#333333", "input-placeholderForeground": "#767676", "icon-foreground": "#3b3b3b", "testing-iconPassed": "#388a34",
     }),
 }
 
@@ -76,6 +76,18 @@ def send(page, *messages):
     page.wait_for_timeout(150)
 
 
+CONFIG = {"llm": {"default": "ollama", "providers": {
+    "ollama": {"base_url": "http://localhost:11434/v1", "model": "qwen2.5-coder:14b"},
+    "lmstudio": {"base_url": "http://localhost:1234/v1", "model": "deepseek-coder-v2:16b"}}}}
+
+
+def open_model_menu(page):
+    page.click(".bk-pill")
+    page.wait_for_timeout(100)
+    call = [m for m in page.evaluate("window.__posted") if m.get("type") == "rpc" and m.get("method") == "config"][-1]
+    send(page, {"type": "rpc", "id": call["id"], "result": CONFIG})
+
+
 def shoot(browser, theme, width, name, state, messages, after=None, height=720):
     spec = THEMES[theme]
     css = ";".join(f"--vscode-{k}:{v}" for k, v in spec["vars"].items()) + ";--vscode-font-family:system-ui,sans-serif;--vscode-font-size:13px;--vscode-editor-font-family:monospace;--vscode-editor-font-size:12px"
@@ -112,7 +124,15 @@ def main():
             shoot(browser, theme, 380, "navigation", READY,
                   [{"type": "onboarding/state", "progress": {**progress, "firstAnswer": True}, "mcpEnabled": True},
                    {"type": "chat/state", "turns": [TURN]}],
-                  after=lambda page: page.click("[aria-haspopup=menu]"))
+                  after=lambda page: page.click(".bk-tools"))
+        ready_msgs = [{"type": "onboarding/state", "progress": {**progress, "firstAnswer": True}, "mcpEnabled": True},
+                      {"type": "chat/state", "turns": [TURN]}, {"type": "context/state", "items": CHIPS, "limit": 40000}]
+        for theme in THEMES:
+            shoot(browser, theme, 380, "model-menu", READY, ready_msgs, after=open_model_menu)
+            shoot(browser, theme, 380, "context-menu", READY, ready_msgs, after=lambda page: page.click(".bk-context-button"))
+            no_llm = {**READY, "status": {**STATUS, "llm": {"provider": "none"}}}
+            shoot(browser, theme, 380, "index-only", no_llm, ready_msgs)
+        shoot(browser, "dark", 1000, "wide", READY, ready_msgs, height=760)
         shoot(browser, "dark", 260, "narrow", READY,
               [{"type": "onboarding/state", "progress": {**progress, "firstAnswer": True}, "mcpEnabled": True},
                {"type": "chat/state", "turns": [TURN]}], height=640)

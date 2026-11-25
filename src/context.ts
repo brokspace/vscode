@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { type ContextItem, excludedBy, isSensitivePath, makeItem } from './core/context';
+import { type ContextItem, excludedBy, filterDiff, isSensitivePath, makeItem } from './core/context';
 
 const t = vscode.l10n.t;
 
@@ -205,4 +205,35 @@ async function many(root: string, uris: vscode.Uri[], picked: boolean, exclude: 
         notes.push(t('Nothing could be attached.'));
     }
     return { items, problem: notes.join(' ') || undefined };
+}
+
+/** The uncommitted changes (`git diff HEAD`) minus the files that may not be attached, as one item. */
+export async function gitDiff(root: string, exclude: string[] = []): Promise<Attached> {
+    const diff = await new Promise<string | undefined>((resolve) => {
+        execFile(
+            'git',
+            ['diff', 'HEAD', '--no-color', '--no-ext-diff'],
+            { cwd: root, windowsHide: true, maxBuffer: 4_000_000 },
+            (error, stdout) => resolve(error ? undefined : stdout),
+        );
+    });
+    if (diff === undefined) {
+        return nothing(t('No Git changes could be read here.'));
+    }
+    if (!diff.trim()) {
+        return nothing(t('There are no uncommitted changes.'));
+    }
+    const paths = [...diff.matchAll(/^diff --git a\/.+? b\/(.+)$/gm)].map((match) => match[1] as string);
+    const refused = new Set<string>();
+    for (const file of paths) {
+        if (isSensitivePath(file) || excludedBy(file, exclude) || (await gitIgnored(root, file))) {
+            refused.add(file);
+        }
+    }
+    const { text, kept } = filterDiff(diff, (file) => !refused.has(file));
+    if (!kept.length) {
+        return nothing(t('The changed files may not be attached (credentials, ignored or excluded).'));
+    }
+    const note = refused.size ? t('{0} files were left out (credentials, ignored, excluded or not text).', refused.size) : undefined;
+    return { items: [makeItem(crypto.randomUUID(), 'diff', t('Uncommitted changes ({0} files)', kept.length), text)], problem: note };
 }

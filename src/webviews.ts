@@ -174,6 +174,9 @@ abstract class BrokspaceWebview implements vscode.Disposable {
                 return this.memory.forget(params[0] as Parameters<MemoryStore['forget']>[0]);
             case 'reloadMemories':
                 return this.memory.reload();
+            case 'copy':
+                await vscode.env.clipboard.writeText(String(params[0] ?? ''));
+                return undefined;
             case 'refresh':
                 await this.model.refresh();
                 return undefined;
@@ -446,6 +449,7 @@ export class ChatPanel extends BrokspaceWebview {
             .then((config) => config.index?.exclude ?? [])
             .catch(() => []);
         const found = await {
+            diff: attach.gitDiff,
             tabs: attach.openTabs,
             folder: attach.pickFolder,
             file: attach.activeFile,
