@@ -233,6 +233,12 @@ body.page-settings #root {
 }
 
 .bk-chat-model {
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -439,4 +445,63 @@ body.page-settings #root {
 .bk-send:disabled {
     opacity: 0.4;
     cursor: default;
+}
+
+/* ------------------------------------------------------------ workspace
+   The sidebar: chat and settings as two tabs of one page. */
+
+.bk-workspace {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bk-workspace-nav {
+    display: flex;
+    gap: var(--bk-space-1);
+    padding: var(--bk-space-1) var(--bk-space-2) 0;
+    border-bottom: 1px solid var(--theia-widget-border, var(--vscode-panel-border, transparent));
+}
+
+.bk-workspace-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+    padding: var(--bk-space-1) var(--bk-space-2);
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--vscode-foreground);
+    font: inherit;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.bk-workspace-tab:hover,
+.bk-workspace-tab-on {
+    opacity: 1;
+}
+
+.bk-workspace-tab-on {
+    border-bottom-color: var(--vscode-focusBorder, currentColor);
+}
+
+.bk-workspace-tab:focus-visible {
+    outline: 1px solid var(--vscode-focusBorder);
+    outline-offset: -1px;
+}
+
+.bk-workspace-panel {
+    flex: 1;
+    min-height: 0;
+}
+
+.bk-workspace-panel[hidden] {
+    display: none;
+}
+
+.bk-workspace-settings {
+    container-type: inline-size;
+    overflow: auto;
+    line-height: var(--bk-line);
 }

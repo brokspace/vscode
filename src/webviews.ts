@@ -64,9 +64,9 @@ abstract class BrokspaceWebview implements vscode.Disposable {
     }
 
     /** Shows the page in a webview (an editor tab or a sidebar view) and routes its messages here. */
-    protected attach(webview: vscode.Webview, onDispose: (listener: () => void) => vscode.Disposable): void {
+    protected attach(webview: vscode.Webview, onDispose: (listener: () => void) => vscode.Disposable, page: Page = this.page): void {
         this.webviews.add(webview);
-        webview.html = html(webview, this.context.extensionUri, this.page);
+        webview.html = html(webview, this.context.extensionUri, page);
         webview.onDidReceiveMessage((msg: WebviewMessage) => this.onMessage(msg), undefined, this.disposables);
         onDispose(() => this.webviews.delete(webview));
     }
@@ -218,7 +218,7 @@ export class ChatPanel extends BrokspaceWebview {
     /** The chat in the Brokspace sidebar: the home of the assistant. It shares this conversation with the editor tab. */
     resolveWebviewView(view: vscode.WebviewView): void {
         view.webview.options = { enableScripts: true, localResourceRoots: this.resourceRoots() };
-        this.attach(view.webview, view.onDidDispose.bind(view));
+        this.attach(view.webview, view.onDidDispose.bind(view), 'workspace');
     }
 
     /** Opens the chat in the sidebar; `prompt` is sent right away. */
