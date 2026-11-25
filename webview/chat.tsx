@@ -9,6 +9,7 @@ import type { SkillInfo } from '../src/core/protocol';
 import { cite, formatMs } from '../src/core/text';
 import type { ChatTurn, ContextChip, ContextSource, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
+import { NavMenu } from './navmenu';
 import { Onboarding } from './onboarding';
 
 // No raw HTML from the model; links open outside (see `onClick`).
@@ -212,12 +213,15 @@ export function ChatApp({
     };
     const openSettings = (section: SettingsSection = 'overview') =>
         onOpenSettings ? onOpenSettings(section) : host.command('brokspace.settings', section);
+    const folder = host.root?.split(/[\\/]/).filter(Boolean).pop();
     const llm = host.state.kind === 'ready' ? host.state.status.llm?.model : undefined;
 
     return (
         <div className="bk-chat">
             <header className="bk-chat-head">
-                <span className="bk-chat-title">Brokspace</span>
+                <span className="bk-chat-title" title={host.root ?? 'Brokspace'}>
+                    {folder ?? 'Brokspace'}
+                </span>
                 <button
                     type="button"
                     className="bk-chat-model"
@@ -227,6 +231,7 @@ export function ChatApp({
                     {llm ?? t('No LLM: answers from the index')}
                 </button>
                 <span className="bk-spacer" />
+                <NavMenu host={host} onOpenSettings={openSettings} inSidebar={!!onOpenSettings} />
                 <button
                     type="button"
                     className={`bk-icon-button ${codicon('add')}`}
