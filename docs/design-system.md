@@ -47,4 +47,4 @@ Icons are Codicons (`codicon(name)`); no emoji is used as a control.
 
 ## Checking by hand
 
-`npm run test:unit` covers the rules above. By hand, in the Extension Development Host (`F5`): try a light, a dark and a high-contrast theme; narrow the sidebar; press Tab through the chat, History and Settings; turn on a screen reader and ask a question; set "reduce motion" in the operating system. Screenshots of these states are not in the repository yet: they need a real editor session.
+`npm run test:unit` covers the rules above. By hand, in the Extension Development Host (`F5`): try a light, a dark and a high-contrast theme; narrow the sidebar; press Tab through the chat, History and Settings; turn on a screen reader and ask a question; set "reduce motion" in the operating system. `python3 scripts/screenshots.py` (needs `npm run build` and Playwright) renders the real UI with sample data in a dark and a light theme and in a narrow sidebar into `docs/images`; it checks layout, not the behavior inside a running editor.

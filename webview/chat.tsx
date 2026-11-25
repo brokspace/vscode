@@ -9,7 +9,8 @@ import type { SkillInfo } from '../src/core/protocol';
 import { cite, formatMs } from '../src/core/text';
 import type { ChatTurn, ContextChip, ContextSource, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
-import { NavMenu } from './navmenu';
+import { type MenuItem, PopMenu } from './menu';
+import { ModelPill } from './modelpill';
 import { Onboarding } from './onboarding';
 
 // No raw HTML from the model; links open outside (see `onClick`).
@@ -142,7 +143,41 @@ export function ChatApp({
                   description: skill.description,
               }))
         : [];
-    const menu = menuClosed ? [] : matchSlash(skillEntries.length ? skillEntries : commands, draft);
+    // The popup under the box: `/` commands, or `@` context sources. Each entry knows what choosing it does.
+    interface Entry {
+        key: string;
+        label: string;
+        description: string;
+        run: () => void;
+    }
+    const sources: [ContextSource, string, string, string][] = [
+        ['file', '@file', t('The active file'), 'file-code'],
+        ['selection', '@selection', t('The selected code'), 'list-selection'],
+        ['diff', '@diff', t('Your uncommitted Git changes'), 'git-compare'],
+        ['folder', '@folder', t('A folder you pick'), 'folder-opened'],
+        ['tabs', '@tabs', t('The open tabs'), 'multiple-windows'],
+        ['diagnostics', '@problems', t('Errors and warnings of the active file'), 'warning'],
+        ['pick', '@files', t('Files you pick'), 'files'],
+    ];
+    const at = /(^|\s)@([a-z]*)$/i.exec(draft);
+    const attachNow = (source: ContextSource) => {
+        host.post({ type: 'context/add', source });
+        setDraft(at ? draft.slice(0, draft.length - at[0].length) + at[1] : draft);
+        input.current?.focus();
+    };
+    const entries: Entry[] = menuClosed
+        ? []
+        : at && ready
+          ? sources
+                .filter(([, label]) => label.startsWith(`@${at[2]?.toLowerCase() ?? ''}`))
+                .map(([source, label, description]) => ({ key: label, label, description, run: () => attachNow(source) }))
+          : matchSlash(skillEntries.length ? skillEntries : commands, draft).map((entry) => ({
+                key: entry.insert,
+                label: (entry as (typeof commands)[number]).label,
+                description: (entry as (typeof commands)[number]).description,
+                run: () => choose(entry),
+            }));
+    const menu = entries;
     const active = Math.min(pick, Math.max(0, menu.length - 1));
     // biome-ignore lint/correctness/useExhaustiveDependencies: fetch the skills the first time a /skill command is typed.
     React.useEffect(() => {
@@ -167,7 +202,7 @@ export function ChatApp({
             }
             if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
                 e.preventDefault();
-                choose(menu[active] as SlashEntry);
+                (menu[active] as Entry).run();
                 return;
             }
             if (e.key === 'Escape') {
@@ -213,8 +248,21 @@ export function ChatApp({
     };
     const openSettings = (section: SettingsSection = 'overview') =>
         onOpenSettings ? onOpenSettings(section) : host.command('brokspace.settings', section);
+    const command = (name: string) => () => host.command(name);
+    const tools: MenuItem[] = [
+        { id: 'search', icon: 'search', label: t('Search the workspace'), run: command('brokspace.search') },
+        { id: 'memory', icon: 'book', label: t('Memories'), run: () => openSettings('memory') },
+        { id: 'links', icon: 'link', label: t('Linked workspaces'), run: () => openSettings('links') },
+        { id: 'skills', icon: 'wand', label: t('Skills'), run: command('brokspace.skills.focus') },
+        { id: 'shards', icon: 'package', label: t('Shards'), run: command('brokspace.shards.focus') },
+        { id: 'overview', icon: 'dashboard', label: t('Overview'), divider: true, run: command('brokspace.overview.focus') },
+        { id: 'doctor', icon: 'pulse', label: t('Check the setup'), run: command('brokspace.doctor') },
+        ...(onOpenSettings
+            ? [{ id: 'editor', icon: 'multiple-windows', label: t('Open chat in the editor'), run: command('brokspace.openChatInEditor') }]
+            : []),
+    ];
     const folder = host.root?.split(/[\\/]/).filter(Boolean).pop();
-    const llm = host.state.kind === 'ready' ? host.state.status.llm?.model : undefined;
+    const llm = host.state.kind === 'ready' ? (host.state.status.llm?.model ?? undefined) : undefined;
 
     return (
         <div className="bk-chat">
@@ -222,29 +270,27 @@ export function ChatApp({
                 <span className="bk-chat-title" title={host.root ?? 'Brokspace'}>
                     {folder ?? 'Brokspace'}
                 </span>
-                <button
-                    type="button"
-                    className="bk-chat-model"
-                    title={t('Answers come from this model, through brok')}
-                    onClick={() => openSettings('model')}
-                >
-                    {llm ?? t('No LLM: answers from the index')}
-                </button>
+                <ModelPill host={host} model={llm} onOpenSettings={openSettings} onIndexOnly={() => suggest('/search ')} />
                 <span className="bk-spacer" />
-                <NavMenu host={host} onOpenSettings={openSettings} inSidebar={!!onOpenSettings} />
+                <PopMenu
+                    label={t('Tools: search, memories, skills and more')}
+                    triggerClassName="bk-tools"
+                    trigger={
+                        <>
+                            <span className={codicon('tools')} aria-hidden="true" />
+                            <span className="bk-tools-label">{t('Tools')}</span>
+                            <span className={codicon('chevron-down')} aria-hidden="true" />
+                        </>
+                    }
+                    items={tools}
+                    align="right"
+                />
                 <button
                     type="button"
                     className={`bk-icon-button ${codicon('add')}`}
                     title={t('New chat')}
                     aria-label={t('New chat')}
                     onClick={() => host.post({ type: 'chat/new' })}
-                />
-                <button
-                    type="button"
-                    className={`bk-icon-button ${codicon('settings-gear')}`}
-                    title={t('Settings')}
-                    aria-label={t('Settings')}
-                    onClick={() => openSettings('model')}
                 />
             </header>
 
@@ -308,48 +354,16 @@ export function ChatApp({
                     </div>
                 )}
                 {turns.map((turn) => (
-                    <Turn key={turn.id} turn={turn} progress={progress[turn.id]} host={host} />
+                    <Turn key={turn.id} turn={turn} progress={progress[turn.id]} host={host} busy={running} />
                 ))}
                 <div ref={end} />
             </main>
-
-            <div className="bk-context">
-                <div className="bk-context-add" role="group" aria-label={t('Attach context')}>
-                    {(
-                        [
-                            ['file', 'file-code', t('Attach the active file')],
-                            ['selection', 'list-selection', t('Attach the selected code')],
-                            ['pick', 'files', t('Pick files to attach')],
-                            ['folder', 'folder-opened', t('Pick a folder to attach')],
-                            ['tabs', 'multiple-windows', t('Attach the open tabs')],
-                            ['diagnostics', 'warning', t('Attach the problems of the active file')],
-                        ] as [ContextSource, string, string][]
-                    ).map(([source, icon, label]) => (
-                        <button
-                            key={source}
-                            type="button"
-                            className={`bk-icon-button ${codicon(icon)}`}
-                            title={label}
-                            aria-label={label}
-                            disabled={!ready}
-                            onClick={() => host.post({ type: 'context/add', source })}
-                        />
-                    ))}
-                </div>
-                {chips.items.length > 0 && (
-                    <ul className="bk-chips" aria-label={t('Context for your next question')}>
-                        {chips.items.map((chip) => (
-                            <Chip key={chip.id} chip={chip} host={host} />
-                        ))}
-                    </ul>
-                )}
-            </div>
 
             {menu.length > 0 && (
                 <div id="bk-slash-menu" className="bk-slash" role="listbox" aria-label={t('Commands')}>
                     {menu.map((entry, i) => (
                         <div
-                            key={entry.insert}
+                            key={entry.key}
                             id={`bk-slash-${i}`}
                             role="option"
                             tabIndex={-1}
@@ -357,7 +371,7 @@ export function ChatApp({
                             className={`bk-slash-item ${i === active ? 'bk-slash-on' : ''}`}
                             onMouseDown={(e) => {
                                 e.preventDefault();
-                                choose(entry);
+                                entry.run();
                             }}
                         >
                             <code>{entry.label}</code>
@@ -368,18 +382,25 @@ export function ChatApp({
             )}
 
             <form
-                className="bk-chat-input"
+                className="bk-composer"
                 onSubmit={(e) => {
                     e.preventDefault();
                     send(draft);
                 }}
             >
+                {chips.items.length > 0 && (
+                    <ul className="bk-chips" aria-label={t('Context for your next question')}>
+                        {chips.items.map((chip) => (
+                            <Chip key={chip.id} chip={chip} host={host} />
+                        ))}
+                    </ul>
+                )}
                 <textarea
                     ref={input}
                     rows={Math.min(8, Math.max(2, draft.split('\n').length))}
                     value={draft}
                     disabled={!ready}
-                    placeholder={t('Ask a question, or type / for commands')}
+                    placeholder={t('Ask a question, / for commands, @ for context')}
                     aria-label={t('Ask Brokspace')}
                     onChange={(e) => {
                         setDraft(e.currentTarget.value);
@@ -394,30 +415,77 @@ export function ChatApp({
                     aria-autocomplete="list"
                     aria-activedescendant={menu.length ? `bk-slash-${active}` : undefined}
                 />
-                {running ? (
+                <div className="bk-composer-bar" role="group" aria-label={t('Attach context')}>
+                    <PopMenu
+                        label={t('Add context: files, selection, Git changes, problems')}
+                        triggerClassName="bk-context-button"
+                        trigger={
+                            <>
+                                <span className={codicon('add')} aria-hidden="true" />
+                                <span>{t('Context')}</span>
+                            </>
+                        }
+                        items={sources.map(([source, , description, icon]) => ({
+                            id: source,
+                            icon,
+                            label: description,
+                            disabled: !ready,
+                            run: () => host.post({ type: 'context/add', source }),
+                        }))}
+                        up
+                    />
                     <button
                         type="button"
-                        className={`bk-send ${codicon('debug-stop')}`}
-                        title={t('Stop')}
-                        aria-label={t('Stop')}
-                        onClick={() => host.post({ type: 'chat/cancel' })}
+                        className={`bk-icon-button ${codicon('file-code')}`}
+                        title={t('Attach the active file')}
+                        aria-label={t('Attach the active file')}
+                        disabled={!ready || !editor.file}
+                        onClick={() => host.post({ type: 'context/add', source: 'file' })}
                     />
-                ) : (
                     <button
-                        type="submit"
-                        className={`bk-send ${codicon('send')}`}
-                        title={t('Send')}
-                        aria-label={t('Send')}
-                        disabled={!draft.trim() || !ready}
+                        type="button"
+                        className={`bk-icon-button ${codicon('list-selection')}`}
+                        title={t('Attach the selected code')}
+                        aria-label={t('Attach the selected code')}
+                        disabled={!ready || !editor.selection}
+                        onClick={() => host.post({ type: 'context/add', source: 'selection' })}
                     />
-                )}
+                    <span className="bk-spacer" />
+                    {running ? (
+                        <button
+                            type="button"
+                            className={`bk-send ${codicon('debug-stop')}`}
+                            title={t('Stop')}
+                            aria-label={t('Stop')}
+                            onClick={() => host.post({ type: 'chat/cancel' })}
+                        />
+                    ) : (
+                        <button
+                            type="submit"
+                            className={`bk-send ${codicon('send')}`}
+                            title={t('Send')}
+                            aria-label={t('Send')}
+                            disabled={!draft.trim() || !ready}
+                        />
+                    )}
+                </div>
             </form>
         </div>
     );
 }
 
-function Turn({ turn, progress, host }: { turn: ChatTurn; progress?: string; host: Host }): React.ReactElement {
+function Turn({ turn, progress, host, busy }: { turn: ChatTurn; progress?: string; host: Host; busy: boolean }): React.ReactElement {
     const html = React.useMemo(() => markdown.render(turn.answer), [turn.answer]);
+    const [copied, setCopied] = React.useState(false);
+    const copy = () => {
+        host.rpc('copy', turn.answer).then(
+            () => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+            },
+            () => undefined,
+        );
+    };
     return (
         <article className="bk-turn">
             <div className="bk-question">{turn.question}</div>
@@ -476,7 +544,7 @@ function Turn({ turn, progress, host }: { turn: ChatTurn; progress?: string; hos
                                     <button
                                         type="button"
                                         className="bk-source"
-                                        title={source.path}
+                                        title={`${source.path}:${source.start_line}-${source.end_line}`}
                                         onClick={() =>
                                             host.post({
                                                 type: 'open',
@@ -486,16 +554,42 @@ function Turn({ turn, progress, host }: { turn: ChatTurn; progress?: string; hos
                                             })
                                         }
                                     >
-                                        <span className={codicon(source.path.includes('memory') ? 'library' : 'file-code')} />
-                                        <code>{cite(source)}</code>
-                                        {source.symbol && <span className="bk-source-symbol">{source.symbol}</span>}
+                                        <span
+                                            className={codicon(source.path.includes('memory') ? 'library' : 'file-code')}
+                                            aria-hidden="true"
+                                        />
+                                        <code>{cite({ ...source, path: source.path.split('/').pop() ?? source.path })}</code>
+                                        {source.symbol && <span className="bk-source-symbol">· {source.symbol}</span>}
+                                        {source.path.includes('/') && (
+                                            <span className="bk-source-path">{source.path.replace(/\/[^/]*$/, '')}</span>
+                                        )}
                                     </button>
                                 </li>
                             ))}
                         </ul>
                     </div>
                 )}
-                {turn.done && turn.model && <div className="bk-turn-model">{turn.model}</div>}
+                {turn.done && (
+                    <div className="bk-turn-foot">
+                        {turn.answer && (
+                            <button type="button" className="bk-foot-button" onClick={copy}>
+                                <span className={codicon(copied ? 'check' : 'copy')} aria-hidden="true" />{' '}
+                                {copied ? t('Copied') : t('Copy')}
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            className="bk-foot-button"
+                            disabled={busy}
+                            title={t('Ask this question again')}
+                            onClick={() => host.post({ type: 'chat/send', text: turn.question })}
+                        >
+                            <span className={codicon('refresh')} aria-hidden="true" /> {t('Retry')}
+                        </button>
+                        <span className="bk-spacer" />
+                        {turn.model && <span className="bk-turn-model">{turn.model}</span>}
+                    </div>
+                )}
             </div>
         </article>
     );
@@ -509,7 +603,14 @@ function Chip({ chip, host }: { chip: ContextChip; host: Host }): React.ReactEle
         chip.redactions ? t('{0} secrets hidden', chip.redactions) : undefined,
         chip.external ? t('outside the workspace') : undefined,
     ].filter(Boolean);
-    const icon = chip.kind === 'selection' ? 'list-selection' : chip.kind === 'diagnostics' ? 'warning' : 'file-code';
+    const icon =
+        chip.kind === 'selection'
+            ? 'list-selection'
+            : chip.kind === 'diagnostics'
+              ? 'warning'
+              : chip.kind === 'diff'
+                ? 'git-compare'
+                : 'file-code';
     return (
         <li className={`bk-chip ${chip.omitted ? 'bk-chip-omitted' : ''}`}>
             <span className={codicon(icon)} aria-hidden="true" />

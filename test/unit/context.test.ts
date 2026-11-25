@@ -125,3 +125,19 @@ describe('workspace exclusions', () => {
         assert.equal(excludedBy('src/a.rs', []), undefined);
     });
 });
+
+describe('git diff context', () => {
+    const diff = [
+        'diff --git a/src/a.ts b/src/a.ts\n--- a/src/a.ts\n+++ b/src/a.ts\n@@ -1 +1 @@\n-a\n+b\n',
+        'diff --git a/.env b/.env\n--- a/.env\n+++ b/.env\n@@ -1 +1 @@\n-X=1\n+X=2\n',
+        'diff --git a/src/c.ts b/src/c.ts\n--- a/src/c.ts\n+++ b/src/c.ts\n@@ -1 +1 @@\n-c\n+d\n',
+    ].join('');
+    it('drops the files that may not be attached and keeps the rest', async () => {
+        const { filterDiff } = await import('../../src/core/context');
+        const result = filterDiff(diff, (path) => !isSensitivePath(path));
+        assert.deepEqual(result.kept, ['src/a.ts', 'src/c.ts']);
+        assert.deepEqual(result.dropped, ['.env']);
+        assert.ok(!result.text.includes('X=2'));
+        assert.ok(result.text.includes('+d'));
+    });
+});
