@@ -115,7 +115,11 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
 
     // ---------------------------------------------------------------- search, chat, reviews
     register('brokspace.search', () => requireReady() && searchWorkspace(model));
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider('brokspace.chat', chat, { webviewOptions: { retainContextWhenHidden: true } }),
+    );
     register('brokspace.openChat', () => chat.show());
+    register('brokspace.openChatInEditor', () => chat.showInEditor());
     register('brokspace.ask', async (prompt?: unknown) => {
         if (typeof prompt === 'string' && prompt.trim()) {
             chat.show(prompt);
