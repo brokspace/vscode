@@ -72,6 +72,12 @@
     "views": {
       "brokspace": [
         {
+          "type": "webview",
+          "id": "brokspace.chat",
+          "name": "%view.chat%",
+          "icon": "media/mark.svg"
+        },
+        {
           "id": "brokspace.overview",
           "name": "%view.overview%",
           "icon": "media/mark.svg"
@@ -161,6 +167,12 @@
         "title": "%cmd.openChat%",
         "category": "Brokspace",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "brokspace.openChatInEditor",
+        "title": "%cmd.openChatInEditor%",
+        "category": "Brokspace",
+        "icon": "$(link-external)"
       },
       {
         "command": "brokspace.review",
