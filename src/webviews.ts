@@ -16,6 +16,8 @@ const t = vscode.l10n.t;
 /** Shared by both webviews: RPC with brok, commands, opening files and links. */
 abstract class BrokspaceWebview implements vscode.Disposable {
     protected panel: vscode.WebviewPanel | undefined;
+    /** Every page showing this state: an editor tab and, for the chat, the sidebar view. */
+    protected readonly webviews = new Set<vscode.Webview>();
     protected readonly disposables: vscode.Disposable[] = [];
 
     constructor(
@@ -38,6 +40,10 @@ abstract class BrokspaceWebview implements vscode.Disposable {
         }
     }
 
+    protected resourceRoots(): vscode.Uri[] {
+        return [vscode.Uri.joinPath(this.context.extensionUri, 'dist'), vscode.Uri.joinPath(this.context.extensionUri, 'media')];
+    }
+
     protected reveal(column: vscode.ViewColumn): vscode.WebviewPanel {
         if (this.panel) {
             this.panel.reveal(column);
@@ -46,14 +52,10 @@ abstract class BrokspaceWebview implements vscode.Disposable {
         const panel = vscode.window.createWebviewPanel(`brokspace.${this.page}`, this.title, column, {
             enableScripts: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [
-                vscode.Uri.joinPath(this.context.extensionUri, 'dist'),
-                vscode.Uri.joinPath(this.context.extensionUri, 'media'),
-            ],
+            localResourceRoots: this.resourceRoots(),
         });
         panel.iconPath = vscode.Uri.joinPath(this.context.extensionUri, 'media', 'icon.png');
-        panel.webview.html = html(panel.webview, this.context.extensionUri, this.page);
-        panel.webview.onDidReceiveMessage((msg: WebviewMessage) => this.onMessage(msg), undefined, this.disposables);
+        this.attach(panel.webview, panel.onDidDispose.bind(panel));
         panel.onDidDispose(() => {
             this.panel = undefined;
         });
@@ -61,8 +63,18 @@ abstract class BrokspaceWebview implements vscode.Disposable {
         return panel;
     }
 
+    /** Shows the page in a webview (an editor tab or a sidebar view) and routes its messages here. */
+    protected attach(webview: vscode.Webview, onDispose: (listener: () => void) => vscode.Disposable): void {
+        this.webviews.add(webview);
+        webview.html = html(webview, this.context.extensionUri, this.page);
+        webview.onDidReceiveMessage((msg: WebviewMessage) => this.onMessage(msg), undefined, this.disposables);
+        onDispose(() => this.webviews.delete(webview));
+    }
+
     protected post(msg: HostMessage): void {
-        void this.panel?.webview.postMessage(msg);
+        for (const webview of this.webviews) {
+            void webview.postMessage(msg);
+        }
     }
 
     protected postState(): void {
@@ -203,9 +215,25 @@ export class ChatPanel extends BrokspaceWebview {
         super(context, model, memory, 'chat', t('Brokspace Chat'));
     }
 
-    /** Opens the chat beside the editor; `prompt` is sent right away. */
+    /** The chat in the Brokspace sidebar: the home of the assistant. It shares this conversation with the editor tab. */
+    resolveWebviewView(view: vscode.WebviewView): void {
+        view.webview.options = { enableScripts: true, localResourceRoots: this.resourceRoots() };
+        this.attach(view.webview, view.onDidDispose.bind(view));
+    }
+
+    /** Opens the chat in the sidebar; `prompt` is sent right away. */
     show(prompt?: string): void {
+        void vscode.commands.executeCommand('brokspace.chat.focus');
+        this.sendPrompt(prompt);
+    }
+
+    /** Opens the chat in an editor tab next to the code, for a larger canvas. */
+    showInEditor(prompt?: string): void {
         this.reveal(vscode.ViewColumn.Beside);
+        this.sendPrompt(prompt);
+    }
+
+    private sendPrompt(prompt?: string): void {
         // A page that is still loading gets the turn with the conversation once it is ready.
         if (prompt?.trim()) {
             void this.send(prompt);

@@ -2,7 +2,7 @@
   "name": "brokspace",
   "displayName": "Brokspace: Local AI Code Search & Memory",
   "description": "%description%",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "publisher": "brokspace",
   "license": "MIT OR Apache-2.0",
   "icon": "media/icon.png",
@@ -71,6 +71,12 @@
     },
     "views": {
       "brokspace": [
+        {
+          "type": "webview",
+          "id": "brokspace.chat",
+          "name": "%view.chat%",
+          "icon": "media/mark.svg"
+        },
         {
           "id": "brokspace.overview",
           "name": "%view.overview%",
@@ -161,6 +167,12 @@
         "title": "%cmd.openChat%",
         "category": "Brokspace",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "brokspace.openChatInEditor",
+        "title": "%cmd.openChatInEditor%",
+        "category": "Brokspace",
+        "icon": "$(link-external)"
       },
       {
         "command": "brokspace.review",

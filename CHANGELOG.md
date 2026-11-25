@@ -6,6 +6,12 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-25
+
+### Added
+
+- Chat is now the first view of the Brokspace activity-bar container, so clicking the icon opens the assistant. It is the same conversation as before: **Brokspace: Open Chat** focuses it, and the new **Brokspace: Open Chat in the Editor** opens it in an editor tab for a larger canvas, sharing the same conversation.
+
 ### Changed
 
 - Published to Open VSX (`brokspace.brokspace`) through Trusted Publishing, so Cursor, Windsurf, VSCodium and other Open VSX editors install it from their extensions view.

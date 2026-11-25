@@ -1,5 +1,6 @@
 {
   "description": "Busca, chat e memória de código com IA, local-first, para todo o seu workspace. Busque por significado em vários repositórios, receba respostas do seu próprio LLM com fontes e compartilhe contexto com agentes MCP.",
+  "view.chat": "Chat",
   "view.overview": "Visão Geral",
   "view.memory": "Memória",
   "view.links": "Workspaces Vinculados",
@@ -16,6 +17,7 @@
   "cmd.search": "Buscar no Workspace",
   "cmd.ask": "Perguntar ao Brokspace",
   "cmd.openChat": "Abrir o Chat",
+  "cmd.openChatInEditor": "Abrir o Chat no Editor",
   "cmd.review": "Revisar Alterações Não Commitadas",
   "cmd.reviewStaged": "Revisar Alterações Preparadas",
   "cmd.commitMessage": "Escrever Mensagem de Commit",

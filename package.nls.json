@@ -1,5 +1,6 @@
 {
   "description": "Local-first AI code search, chat and memory for your whole workspace. Search by meaning across repositories, get answers from your own LLM with sources, and share context with MCP agents.",
+  "view.chat": "Chat",
   "view.overview": "Overview",
   "view.memory": "Memory",
   "view.links": "Linked Workspaces",
@@ -16,6 +17,7 @@
   "cmd.search": "Search the Workspace",
   "cmd.ask": "Ask Brokspace",
   "cmd.openChat": "Open Chat",
+  "cmd.openChatInEditor": "Open Chat in the Editor",
   "cmd.review": "Review Uncommitted Changes",
   "cmd.reviewStaged": "Review Staged Changes",
   "cmd.commitMessage": "Write Commit Message",

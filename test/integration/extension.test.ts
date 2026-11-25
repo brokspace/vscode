@@ -45,9 +45,9 @@ suite('Brokspace for VS Code', () => {
         }
     });
 
-    test('opens the settings page and the chat', async () => {
+    test('opens the settings page and the chat in editor tabs', async () => {
         await vscode.commands.executeCommand('brokspace.settings', 'diagnostics');
-        await vscode.commands.executeCommand('brokspace.openChat');
+        await vscode.commands.executeCommand('brokspace.openChatInEditor');
         const labels = () => vscode.window.tabGroups.all.flatMap((group) => group.tabs.map((tab) => tab.label));
         // Tabs show up once the editor has laid the panels out.
         await until(() => (labels().filter((label) => /Brokspace/.test(label)).length >= 2 ? true : undefined), 15_000).catch(
@@ -60,6 +60,12 @@ suite('Brokspace for VS Code', () => {
             ['Brokspace Chat', 'Brokspace Settings'],
             labels().join(', '),
         );
+    });
+
+    test('opens the chat in the sidebar without failing', async () => {
+        // The chat is the first view of the Brokspace container; focusing it must resolve its webview.
+        await vscode.commands.executeCommand('brokspace.openChat');
+        await vscode.commands.executeCommand('brokspace.chat.focus');
     });
 
     test('sets up a workspace with brok', async function (this: Mocha.Context) {
