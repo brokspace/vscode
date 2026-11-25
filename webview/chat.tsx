@@ -2,9 +2,10 @@
 
 import MarkdownIt from 'markdown-it';
 import * as React from 'react';
+import { type ActivityStep, duration } from '../src/core/activity';
 import { matchSlash, type SlashEntry, stepHistory } from '../src/core/composer';
 import type { SkillInfo } from '../src/core/protocol';
-import { cite } from '../src/core/text';
+import { cite, formatMs } from '../src/core/text';
 import type { ChatTurn, ContextChip, ContextSource, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
 
@@ -62,6 +63,9 @@ export function ChatApp({
                         break;
                     case 'chat/progress':
                         setProgress((all) => ({ ...all, [msg.id]: msg.text }));
+                        break;
+                    case 'chat/steps':
+                        setTurns((all) => all.map((turn) => (turn.id === msg.id ? { ...turn, steps: msg.steps } : turn)));
                         break;
                     case 'chat/chunk':
                         setTurns((all) => all.map((turn) => (turn.id === msg.id ? { ...turn, answer: turn.answer + msg.text } : turn)));
@@ -385,6 +389,7 @@ function Turn({ turn, progress, host }: { turn: ChatTurn; progress?: string; hos
                     <span className={codicon('attach')} /> {t('Context')}: {turn.context.join(', ')}
                 </div>
             )}
+            {turn.steps && turn.steps.length > 0 && <Activity steps={turn.steps} running={!turn.done} host={host} />}
             <div className="bk-answer">
                 {!turn.done && !turn.answer && (
                     <div className="bk-progress">
@@ -495,5 +500,65 @@ function Chip({ chip, host }: { chip: ContextChip; host: Host }): React.ReactEle
                 onClick={() => host.post({ type: 'context/remove', id: chip.id })}
             />
         </li>
+    );
+}
+
+/** What the assistant did for one turn: compact steps, each with what it touched and how it ended. */
+function Activity({ steps, running, host }: { steps: ActivityStep[]; running: boolean; host: Host }): React.ReactElement {
+    const kinds = {
+        read: { icon: 'eye', label: t('Read only') },
+        network: { icon: 'cloud-upload', label: t('Sent to your LLM') },
+        write: { icon: 'edit', label: t('Changes something') },
+    } as const;
+    const states = {
+        running: { icon: `${codicon('loading')} codicon-modifier-spin`, label: t('Running') },
+        done: { icon: codicon('check'), label: t('Done') },
+        failed: { icon: codicon('error'), label: t('Failed') },
+        cancelled: { icon: codicon('circle-slash'), label: t('Stopped') },
+    } as const;
+    const open = (resource: string) => {
+        const match = /^(.*):(\d+)-(\d+)$/.exec(resource);
+        if (match) {
+            host.post({ type: 'open', path: match[1] as string, line: Number(match[2]), endLine: Number(match[3]) });
+        }
+    };
+    return (
+        <details className="bk-activity" open={running}>
+            <summary>{t('Activity: {0} steps', steps.length)}</summary>
+            <ol className="bk-steps">
+                {steps.map((step) => (
+                    <li key={step.id} className={`bk-step bk-step-${step.status}`}>
+                        <span className={states[step.status].icon} role="img" aria-label={states[step.status].label} />
+                        <div className="bk-step-body">
+                            <div>
+                                {step.label}
+                                <span className="bk-step-meta">
+                                    {' '}
+                                    <span className={codicon(kinds[step.kind].icon)} aria-hidden="true" /> {kinds[step.kind].label}
+                                    {step.endedAt !== undefined && ` · ${formatMs(duration(step))}`}
+                                    {step.approval && ` · ${t('approved by typing the command')}`}
+                                </span>
+                            </div>
+                            {step.error && <div className="bk-step-error">{step.error}</div>}
+                            {step.resources.length > 0 && (
+                                <ul className="bk-step-resources">
+                                    {step.resources.map((resource) => (
+                                        <li key={resource}>
+                                            {/^.*:\d+-\d+$/.test(resource) ? (
+                                                <button type="button" className="bk-link-button" onClick={() => open(resource)}>
+                                                    <code>{resource}</code>
+                                                </button>
+                                            ) : (
+                                                <code>{resource}</code>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </li>
+                ))}
+            </ol>
+        </details>
     );
 }

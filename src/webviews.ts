@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { type Answered, type AnswerSink, answer, sourceOf } from './chat';
 import * as attach from './context';
+import { Activity, ApprovalGate } from './core/activity';
 import { message } from './core/brok';
 import { type LocalCommand, parseLocalCommand } from './core/composer';
 import { type ContextItem, chipOf, contextTurns, MAX_TOTAL_CHARS, withinBudget } from './core/context';
@@ -456,8 +457,11 @@ export class ChatPanel extends BrokspaceWebview {
         }
     }
 
+    /** Every action that changes something goes through here. */
+    protected readonly gate = new ApprovalGate();
+
     /** `/search` and `/remember`: answered here, without the LLM. */
-    protected async runLocal(local: LocalCommand, sink: AnswerSink): Promise<Answered> {
+    protected async runLocal(local: LocalCommand, sink: AnswerSink, activity: Activity): Promise<Answered> {
         const root = this.model.root;
         if (!root || !this.model.ready) {
             throw new Error(t('Set up Brokspace in this folder first: Brokspace: Set Up Workspace.'));
@@ -471,8 +475,21 @@ export class ChatPanel extends BrokspaceWebview {
             return { text, local: true };
         }
         if (local.command === 'remember') {
-            const saved = await this.memory.save({ title: local.argument, kind: 'note', source: 'vscode' });
-            const text = saved ? t('Remembered: {0}', saved.title) : t('Brokspace could not save that memory.');
+            // A write: it goes through the gate, and typing the command is the approval.
+            const action = {
+                id: `remember-${crypto.randomUUID()}`,
+                label: t('Saving a note to memory'),
+                kind: 'write' as const,
+                resources: [t('memory: {0}', local.argument)],
+                run: () => this.memory.save({ title: local.argument, kind: 'note', source: 'vscode' }),
+            };
+            this.gate.request(action, true);
+            activity.start(action.label, action.kind, action.resources, 'typed command');
+            const outcome = await this.gate.execute(action);
+            if (outcome.error || !outcome.value) {
+                throw new Error(outcome.error ?? t('Brokspace could not save that memory.'));
+            }
+            const text = t('Remembered: {0}', outcome.value.title);
             sink.markdown(text);
             return { text, local: true };
         }
@@ -495,18 +512,21 @@ export class ChatPanel extends BrokspaceWebview {
             ]);
         const request = parseRequest(text, history);
         const local = parseLocalCommand(text);
+        const activity = new Activity();
         const turn: ChatTurn = {
             id: crypto.randomUUID(),
             question: text.trim(),
             kind: local?.command ?? request.kind,
             answer: '',
             sources: [],
+            steps: activity.steps,
         };
         if (request.kind === 'ask' && !local && this.attached.length) {
             // Questions only: a review or a skill works from the repository, so the chips stay for the next question.
             const { included } = withinBudget(this.attached);
             request.history = [...contextTurns(included), ...(request.history ?? [])];
             turn.context = included.map((item) => item.label);
+            activity.record(t('Attached context'), 'read', turn.context);
             this.attached = this.attached.filter((item) => item.persistent);
             this.postContext();
         }
@@ -517,14 +537,24 @@ export class ChatPanel extends BrokspaceWebview {
         const running = new vscode.CancellationTokenSource();
         this.running = running;
         try {
+            const sync = () => this.post({ type: 'chat/steps', id: turn.id, steps: structuredClone(activity.steps) });
             const sink = {
-                progress: (progress: string) => this.post({ type: 'chat/progress', id: turn.id, text: progress }),
+                progress: (progress: string) => {
+                    this.post({ type: 'chat/progress', id: turn.id, text: progress });
+                    // Each stage brok reports is a step: reading the index stays on this machine, the rest sends the question to your LLM.
+                    activity.start(progress, progress === t('Searching the index…') ? 'read' : 'network');
+                    sync();
+                },
                 markdown: (chunk: string) => {
                     turn.answer += chunk;
                     this.post({ type: 'chat/chunk', id: turn.id, text: chunk });
                 },
             };
-            const result = local ? await this.runLocal(local, sink) : await answer(this.model, request, sink, running.token);
+            const result = local ? await this.runLocal(local, sink, activity) : await answer(this.model, request, sink, running.token);
+            activity.finish(running.token.isCancellationRequested ? 'cancelled' : 'done', {
+                resources: (result.done?.sources ?? []).map(cite),
+            });
+            sync();
             turn.answer = result.text;
             turn.sources = result.done?.sources ?? [];
             turn.model = result.done?.model ? [result.done.provider, result.done.model].filter(Boolean).join('/') : undefined;
@@ -540,7 +570,9 @@ export class ChatPanel extends BrokspaceWebview {
         } catch (error) {
             turn.error = message(error);
             turn.done = true;
+            activity.finish(running.token.isCancellationRequested ? 'cancelled' : 'failed', { error: turn.error });
         } finally {
+            this.post({ type: 'chat/steps', id: turn.id, steps: structuredClone(activity.steps) });
             this.running = undefined;
             running.dispose();
             this.persist(sessionId, conversation);

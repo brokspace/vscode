@@ -6,6 +6,7 @@
  * the VS Code API.
  */
 
+import type { ActivityStep } from './core/activity';
 import type { BrokInfo, BrokStatus, BugInput, Memory, SourceRef } from './core/protocol';
 
 export type BrokspaceState =
@@ -59,6 +60,8 @@ export interface ChatTurn {
     error?: string;
     /** What was attached to this question. */
     context?: string[];
+    /** What the assistant did to answer: the steps of this turn. */
+    steps?: ActivityStep[];
 }
 
 export type HostMessage =
@@ -72,6 +75,7 @@ export type HostMessage =
     | { type: 'chat/turn'; turn: ChatTurn }
     | { type: 'chat/progress'; id: string; text: string }
     | { type: 'chat/chunk'; id: string; text: string }
+    | { type: 'chat/steps'; id: string; steps: ActivityStep[] }
     | { type: 'chat/done'; turn: ChatTurn };
 
 export type WebviewMessage =

@@ -665,3 +665,49 @@ body.page-settings #root {
 .bk-slash-on span {
     color: inherit;
 }
+
+/* ------------------------------------------------------------- activity */
+
+.bk-activity {
+    margin: var(--bk-space-1) 0;
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+
+.bk-activity summary {
+    cursor: pointer;
+}
+
+.bk-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--bk-space-1);
+    margin: var(--bk-space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-step {
+    display: flex;
+    gap: var(--bk-space-2);
+}
+
+.bk-step-body {
+    min-width: 0;
+}
+
+.bk-step-meta {
+    opacity: 0.85;
+}
+
+.bk-step-failed .bk-step-body,
+.bk-step-error {
+    color: var(--vscode-errorForeground);
+}
+
+.bk-step-resources {
+    margin: 0;
+    padding: 0 0 0 var(--bk-space-2);
+    list-style: none;
+    overflow-wrap: anywhere;
+}
