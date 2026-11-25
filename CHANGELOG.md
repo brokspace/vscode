@@ -8,6 +8,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Attach context to a question: buttons above the composer add the active file, the selected code, files you pick, or the active file's errors and warnings. They show as chips before you send, with what was done to them (shortened, secrets hidden, left out). A chip is for the next question only, or pinned for the whole conversation. Files that hold credentials and files Git ignores are never attached, a file outside the workspace only when you pick it, secrets in the text are hidden, and each item and the total are bounded. The attached context reaches your LLM only with the question you send.
 - Conversation history: a History tab in the sidebar lists the chats of this workspace, with search over titles and messages, resume, rename, delete and clear history (with confirmation). Chats are kept in the workspace's own storage with their sources and model, an answer cut short by closing the window comes back as interrupted, and nothing is kept when `brokspace.chat.saveSessions` or brok's `memory.sessions` is off. They are separate from memories.
 - Settings live in the same sidebar: a Chat and Settings tab bar switches between them without losing the conversation or the draft. Clicking the model in the chat opens the Model settings.
 

@@ -3,7 +3,9 @@
 import * as crypto from 'node:crypto';
 import * as vscode from 'vscode';
 import { answer } from './chat';
+import * as attach from './context';
 import { message } from './core/brok';
+import { type ContextItem, chipOf, contextTurns, MAX_TOTAL_CHARS, withinBudget } from './core/context';
 import type { BugInput } from './core/protocol';
 import {
     markInterrupted,
@@ -21,7 +23,7 @@ import { cite, parseRequest, type SessionTurn } from './core/text';
 import type { MemoryStore } from './memory';
 import type { BrokspaceModel } from './model';
 import { openHit } from './search';
-import type { ChatTurn, HostMessage, Page, SettingsSection, ShowOptions, WebviewMessage } from './webview-protocol';
+import type { ChatTurn, ContextSource, HostMessage, Page, SettingsSection, ShowOptions, WebviewMessage } from './webview-protocol';
 
 const t = vscode.l10n.t;
 
@@ -258,7 +260,9 @@ export class ChatPanel extends BrokspaceWebview {
         this.running?.cancel();
         this.turns = [];
         this.sessionId = crypto.randomUUID();
+        this.attached = [];
         this.post({ type: 'chat/state', turns: this.turns });
+        this.postContext();
     }
 
     protected override async call(method: string, params: unknown[]): Promise<unknown> {
@@ -276,6 +280,8 @@ export class ChatPanel extends BrokspaceWebview {
                 }
                 this.running?.cancel();
                 this.sessionId = session.id;
+                this.attached = [];
+                this.postContext();
                 this.turns = markInterrupted(
                     structuredClone(session.turns),
                     t('Interrupted: the conversation was closed before this answer finished.'),
@@ -357,12 +363,57 @@ export class ChatPanel extends BrokspaceWebview {
 
     protected override onReady(): void {
         this.post({ type: 'chat/state', turns: this.turns });
+        this.postContext();
+    }
+
+    /** Context attached to the conversation: shown as chips before anything is sent. */
+    protected attached: ContextItem[] = [];
+
+    protected postContext(): void {
+        const { omitted } = withinBudget(this.attached);
+        this.post({
+            type: 'context/state',
+            items: this.attached.map((item) => chipOf(item, omitted.includes(item))),
+            limit: MAX_TOTAL_CHARS,
+        });
+    }
+
+    protected async addContext(source: ContextSource): Promise<void> {
+        const root = this.model.root;
+        if (!root) {
+            return;
+        }
+        const found = await {
+            file: attach.activeFile,
+            selection: attach.selection,
+            pick: attach.pickFiles,
+            diagnostics: attach.diagnostics,
+        }[source](root);
+        for (const item of found.items) {
+            // The same file or selection again replaces the earlier one instead of piling up.
+            this.attached = [...this.attached.filter((existing) => existing.label !== item.label || existing.kind !== item.kind), item];
+        }
+        if (found.problem) {
+            void vscode.window.showInformationMessage(found.problem);
+        }
+        this.postContext();
     }
 
     protected override onOtherMessage(msg: WebviewMessage): void {
         switch (msg.type) {
             case 'chat/send':
                 void this.send(msg.text);
+                return;
+            case 'context/add':
+                void this.addContext(msg.source);
+                return;
+            case 'context/remove':
+                this.attached = this.attached.filter((item) => item.id !== msg.id);
+                this.postContext();
+                return;
+            case 'context/pin':
+                this.attached = this.attached.map((item) => (item.id === msg.id ? { ...item, persistent: !item.persistent } : item));
+                this.postContext();
                 return;
             case 'chat/cancel':
                 this.running?.cancel();
@@ -385,6 +436,14 @@ export class ChatPanel extends BrokspaceWebview {
             ]);
         const request = parseRequest(text, history);
         const turn: ChatTurn = { id: crypto.randomUUID(), question: text.trim(), kind: request.kind, answer: '', sources: [] };
+        if (request.kind === 'ask' && this.attached.length) {
+            // Questions only: a review or a skill works from the repository, so the chips stay for the next question.
+            const { included } = withinBudget(this.attached);
+            request.history = [...contextTurns(included), ...(request.history ?? [])];
+            turn.context = included.map((item) => item.label);
+            this.attached = this.attached.filter((item) => item.persistent);
+            this.postContext();
+        }
         const [sessionId, conversation] = [this.sessionId, this.turns]; // the conversation may be replaced while this answers
         conversation.push(turn);
         this.persist(sessionId, conversation);

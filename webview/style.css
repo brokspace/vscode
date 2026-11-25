@@ -576,3 +576,56 @@ body.page-settings #root {
     color: var(--vscode-descriptionForeground);
     font-size: 0.9em;
 }
+
+/* ------------------------------------------------------- attached context */
+
+.bk-context {
+    margin: 0 var(--bk-space-4) var(--bk-space-1);
+}
+
+.bk-context-add {
+    display: flex;
+    gap: var(--bk-space-1);
+}
+
+.bk-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--bk-space-1);
+    margin: var(--bk-space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bk-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--bk-space-1);
+    max-width: 100%;
+    padding: 0 var(--bk-space-1) 0 var(--bk-space-2);
+    border-radius: var(--bk-radius);
+    background: var(--vscode-badge-background);
+    color: var(--vscode-badge-foreground);
+    font-size: 0.9em;
+}
+
+.bk-chip-omitted {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.bk-chip-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bk-chip-note {
+    font-style: italic;
+    opacity: 0.85;
+}
+
+.bk-turn-context {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
