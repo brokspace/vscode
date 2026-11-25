@@ -6,6 +6,13 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-25
+
+### Added
+
+- Add a design and accessibility baseline to the webviews (#62)
+- Guide the first run with a checklist to a first answer (#60)
+
 ## [0.3.0] - 2026-11-25
 
 ### Added
