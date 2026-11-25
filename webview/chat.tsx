@@ -3,7 +3,7 @@
 import MarkdownIt from 'markdown-it';
 import * as React from 'react';
 import { cite } from '../src/core/text';
-import type { ChatTurn } from '../src/webview-protocol';
+import type { ChatTurn, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
 
 // No raw HTML from the model; links open outside (see `onClick`).
@@ -14,7 +14,14 @@ const markdown = new MarkdownIt({ html: false, linkify: true, breaks: false });
  * through brok, grounded in the index, the linked workspaces and the
  * memories, with the sources. `/review`, `/review staged`, `/skill <name>`.
  */
-export function ChatApp({ host }: { host: Host }): React.ReactElement {
+/** `onOpenSettings` is set when the chat lives next to the settings (the sidebar); otherwise Settings opens in an editor tab. */
+export function ChatApp({
+    host,
+    onOpenSettings,
+}: {
+    host: Host;
+    onOpenSettings?: (section?: SettingsSection) => void;
+}): React.ReactElement {
     const [turns, setTurns] = React.useState<ChatTurn[]>([]);
     const [progress, setProgress] = React.useState<Record<string, string>>({});
     const [draft, setDraft] = React.useState('');
@@ -65,15 +72,22 @@ export function ChatApp({ host }: { host: Host }): React.ReactElement {
         host.post({ type: 'chat/send', text });
         setDraft('');
     };
+    const openSettings = (section: SettingsSection) =>
+        onOpenSettings ? onOpenSettings(section) : host.command('brokspace.settings', section);
     const llm = host.state.kind === 'ready' ? host.state.status.llm?.model : undefined;
 
     return (
         <div className="bk-chat">
             <header className="bk-chat-head">
                 <span className="bk-chat-title">Brokspace</span>
-                <span className="bk-chat-model" title={t('Answers come from this model, through brok')}>
+                <button
+                    type="button"
+                    className="bk-chat-model"
+                    title={t('Answers come from this model, through brok')}
+                    onClick={() => openSettings('model')}
+                >
                     {llm ?? t('No LLM: answers from the index')}
-                </span>
+                </button>
                 <span className="bk-spacer" />
                 <button
                     type="button"
@@ -87,7 +101,7 @@ export function ChatApp({ host }: { host: Host }): React.ReactElement {
                     className={`bk-icon-button ${codicon('settings-gear')}`}
                     title={t('Settings')}
                     aria-label={t('Settings')}
-                    onClick={() => host.command('brokspace.settings', 'model')}
+                    onClick={() => openSettings('model')}
                 />
             </header>
 

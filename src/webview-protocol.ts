@@ -17,7 +17,7 @@ export type BrokspaceState =
     | { kind: 'ready'; info: BrokInfo; status: BrokStatus }
     | { kind: 'error'; info: BrokInfo; message: string };
 
-export type Page = 'settings' | 'chat';
+export type Page = 'settings' | 'chat' | 'workspace';
 
 export type SettingsSection = 'overview' | 'model' | 'search' | 'memory' | 'links' | 'agents' | 'diagnostics' | 'report';
 

@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Settings live in the same sidebar: a Chat and Settings tab bar switches between them without losing the conversation or the draft. Clicking the model in the chat opens the Model settings.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added
