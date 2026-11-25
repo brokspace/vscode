@@ -3,10 +3,11 @@
 import * as React from 'react';
 import type { SettingsSection } from '../src/webview-protocol';
 import { ChatApp } from './chat';
+import { HistoryApp } from './history';
 import { codicon, type Host, t } from './host';
 import { SettingsApp } from './settings';
 
-type View = 'chat' | 'settings';
+type View = 'chat' | 'history' | 'settings';
 
 /**
  * The Brokspace sidebar: the chat and the settings in one place. Both stay
@@ -18,6 +19,7 @@ export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
     const settings = React.useRef<SettingsApp>(null);
     const views: { id: View; label: string; icon: string }[] = [
         { id: 'chat', label: t('Chat'), icon: 'comment-discussion' },
+        { id: 'history', label: t('History'), icon: 'history' },
         { id: 'settings', label: t('Settings'), icon: 'settings-gear' },
     ];
 
@@ -28,7 +30,11 @@ export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
 
     const onKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
-            setView((current) => (current === 'chat' ? 'settings' : 'chat'));
+            const order: View[] = ['chat', 'history', 'settings'];
+            setView((current) => {
+                const step = event.key === 'ArrowRight' ? 1 : order.length - 1;
+                return order[(order.indexOf(current) + step) % order.length] as View;
+            });
             event.preventDefault();
         }
     };
@@ -61,6 +67,15 @@ export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
                 hidden={view !== 'chat'}
             >
                 <ChatApp host={host} onOpenSettings={openSettings} />
+            </section>
+            <section
+                id="bk-panel-history"
+                role="tabpanel"
+                aria-labelledby="bk-tab-history"
+                className="bk-workspace-panel bk-workspace-scroll"
+                hidden={view !== 'history'}
+            >
+                <HistoryApp host={host} active={view === 'history'} onOpened={() => setView('chat')} />
             </section>
             <section
                 id="bk-panel-settings"

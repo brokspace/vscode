@@ -5,6 +5,18 @@ import * as vscode from 'vscode';
 import { answer } from './chat';
 import { message } from './core/brok';
 import type { BugInput } from './core/protocol';
+import {
+    markInterrupted,
+    readHistory,
+    remove,
+    rename,
+    type StoredSession,
+    search,
+    summarize,
+    titleFrom,
+    upsert,
+    writeHistory,
+} from './core/sessions';
 import { cite, parseRequest, type SessionTurn } from './core/text';
 import type { MemoryStore } from './memory';
 import type { BrokspaceModel } from './model';
@@ -12,6 +24,8 @@ import { openHit } from './search';
 import type { ChatTurn, HostMessage, Page, SettingsSection, ShowOptions, WebviewMessage } from './webview-protocol';
 
 const t = vscode.l10n.t;
+
+const HISTORY_KEY = 'brokspace.chat.history';
 
 /** Shared by both webviews: RPC with brok, commands, opening files and links. */
 abstract class BrokspaceWebview implements vscode.Disposable {
@@ -208,11 +222,112 @@ export class SettingsPanel extends BrokspaceWebview {
  */
 export class ChatPanel extends BrokspaceWebview {
     protected turns: ChatTurn[] = [];
-    protected sessionId = crypto.randomUUID();
+    protected sessionId: string = crypto.randomUUID();
     protected running: vscode.CancellationTokenSource | undefined;
 
     constructor(context: vscode.ExtensionContext, model: BrokspaceModel, memory: MemoryStore) {
         super(context, model, memory, 'chat', t('Brokspace Chat'));
+        this.history = readHistory(context.workspaceState.get(HISTORY_KEY));
+    }
+
+    /** The saved conversations of this workspace (workspace storage: another workspace never sees them). */
+    protected history: StoredSession[];
+
+    /** Writes the current conversation to the history, when saving is on. */
+    protected persist(id: string, turns: ChatTurn[]): void {
+        if (!this.memory.sessionsEnabled || !turns.length) {
+            return;
+        }
+        const session: StoredSession = {
+            id,
+            title: titleFrom(turns[0].question),
+            updatedAt: Date.now(),
+            turns: structuredClone(turns),
+        };
+        this.history = upsert(this.history, session);
+        void this.context.workspaceState.update(HISTORY_KEY, writeHistory(this.history));
+    }
+
+    protected saveHistory(history: StoredSession[]): void {
+        this.history = history;
+        void this.context.workspaceState.update(HISTORY_KEY, writeHistory(history));
+    }
+
+    /** Starts an empty conversation. */
+    protected reset(): void {
+        this.running?.cancel();
+        this.turns = [];
+        this.sessionId = crypto.randomUUID();
+        this.post({ type: 'chat/state', turns: this.turns });
+    }
+
+    protected override async call(method: string, params: unknown[]): Promise<unknown> {
+        switch (method) {
+            case 'sessions':
+                return {
+                    enabled: this.memory.sessionsEnabled,
+                    total: this.history.length,
+                    sessions: search(this.history, (params[0] as string | undefined) ?? '').map(summarize),
+                };
+            case 'openSession': {
+                const session = this.history.find((item) => item.id === params[0]);
+                if (!session) {
+                    return false;
+                }
+                this.running?.cancel();
+                this.sessionId = session.id;
+                this.turns = markInterrupted(
+                    structuredClone(session.turns),
+                    t('Interrupted: the conversation was closed before this answer finished.'),
+                );
+                this.post({ type: 'chat/state', turns: this.turns });
+                return true;
+            }
+            case 'renameSession': {
+                const session = this.history.find((item) => item.id === params[0]);
+                const title = session && (await vscode.window.showInputBox({ prompt: t('Rename the conversation'), value: session.title }));
+                if (!session || title === undefined) {
+                    return false;
+                }
+                this.saveHistory(rename(this.history, session.id, title));
+                return true;
+            }
+            case 'deleteSession': {
+                const action = t('Delete');
+                if (
+                    (await vscode.window.showWarningMessage(
+                        t('Delete this conversation? This cannot be undone.'),
+                        { modal: true },
+                        action,
+                    )) !== action
+                ) {
+                    return false;
+                }
+                const id = params[0] as string;
+                this.saveHistory(remove(this.history, id));
+                if (id === this.sessionId) {
+                    this.reset();
+                }
+                return true;
+            }
+            case 'clearSessions': {
+                const action = t('Delete all');
+                if (
+                    (await vscode.window.showWarningMessage(
+                        t('Delete all saved conversations of this workspace? This cannot be undone.'),
+                        { modal: true },
+                        action,
+                    )) !== action
+                ) {
+                    return false;
+                }
+                this.saveHistory([]);
+                this.reset();
+                return true;
+            }
+            default:
+                return super.call(method, params);
+        }
     }
 
     /** The chat in the Brokspace sidebar: the home of the assistant. It shares this conversation with the editor tab. */
@@ -253,10 +368,7 @@ export class ChatPanel extends BrokspaceWebview {
                 this.running?.cancel();
                 return;
             case 'chat/new':
-                this.running?.cancel();
-                this.turns = [];
-                this.sessionId = crypto.randomUUID();
-                this.post({ type: 'chat/state', turns: this.turns });
+                this.reset();
                 return;
         }
     }
@@ -273,7 +385,9 @@ export class ChatPanel extends BrokspaceWebview {
             ]);
         const request = parseRequest(text, history);
         const turn: ChatTurn = { id: crypto.randomUUID(), question: text.trim(), kind: request.kind, answer: '', sources: [] };
-        this.turns.push(turn);
+        const [sessionId, conversation] = [this.sessionId, this.turns]; // the conversation may be replaced while this answers
+        conversation.push(turn);
+        this.persist(sessionId, conversation);
         this.post({ type: 'chat/turn', turn });
         const running = new vscode.CancellationTokenSource();
         this.running = running;
@@ -297,10 +411,10 @@ export class ChatPanel extends BrokspaceWebview {
             turn.cancelled = running.token.isCancellationRequested;
             turn.done = true;
             if (request.kind === 'ask' && !turn.cancelled) {
-                const turns: SessionTurn[] = this.turns
+                const turns: SessionTurn[] = conversation
                     .filter((done) => done.kind === 'ask' && done.done && !done.error && done.answer)
                     .map((done) => ({ question: done.question, answer: done.answer, sources: done.sources.map(cite) }));
-                void this.memory.saveSession(this.sessionId, turns).catch(() => undefined);
+                void this.memory.saveSession(sessionId, turns).catch(() => undefined);
             }
         } catch (error) {
             turn.error = message(error);
@@ -308,6 +422,7 @@ export class ChatPanel extends BrokspaceWebview {
         } finally {
             this.running = undefined;
             running.dispose();
+            this.persist(sessionId, conversation);
             this.post({ type: 'chat/done', turn });
         }
     }
