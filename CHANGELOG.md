@@ -6,12 +6,15 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Settings live in the same sidebar: a Chat and Settings tab bar switches between them without losing the conversation or the draft. Clicking the model in the chat opens the Model settings.
+
 ## [0.2.0] - 2026-11-25
 
 ### Added
 
 - Chat is now the first view of the Brokspace activity-bar container, so clicking the icon opens the assistant. It is the same conversation as before: **Brokspace: Open Chat** focuses it, and the new **Brokspace: Open Chat in the Editor** opens it in an editor tab for a larger canvas, sharing the same conversation.
-- Settings live in the same sidebar: a Chat and Settings tab bar switches between them without losing the conversation or the draft. Clicking the model in the chat opens the Model settings.
 
 ### Changed
 
