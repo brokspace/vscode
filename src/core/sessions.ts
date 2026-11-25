@@ -8,6 +8,7 @@
  */
 
 import type { ChatTurn } from '../webview-protocol';
+import { settle } from './activity';
 
 export interface StoredSession {
     id: string;
@@ -60,7 +61,10 @@ export function writeHistory(sessions: StoredSession[]): StoredHistory {
 
 /** A turn that never finished (the window closed mid-answer) becomes a failed turn instead of vanishing or spinning forever. */
 export function markInterrupted(turns: ChatTurn[], reason: string = INTERRUPTED): ChatTurn[] {
-    return turns.map((turn) => (turn.done ? turn : { ...turn, done: true, error: turn.error ?? reason }));
+    return turns.map((turn) => {
+        const steps = turn.steps && settle(turn.steps);
+        return turn.done ? { ...turn, steps } : { ...turn, steps, done: true, error: turn.error ?? reason };
+    });
 }
 
 /** Adds or replaces a session, newest first, keeping at most `MAX_SESSIONS`. A renamed session keeps its title. */
