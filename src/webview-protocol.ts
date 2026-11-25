@@ -47,7 +47,7 @@ export type ContextSource = 'file' | 'selection' | 'pick' | 'diagnostics';
 export interface ChatTurn {
     id: string;
     question: string;
-    kind: 'ask' | 'review' | 'skill';
+    kind: 'ask' | 'review' | 'skill' | 'search' | 'remember';
     answer: string;
     sources: SourceRef[];
     /** `provider/model` that answered. */
@@ -67,6 +67,7 @@ export type HostMessage =
     | { type: 'rpc'; id: number; result?: unknown; error?: string }
     | { type: 'show'; section: SettingsSection; options: ShowOptions }
     | { type: 'context/state'; items: ContextChip[]; limit: number }
+    | { type: 'editor/state'; file?: string; selection: boolean; sendWith: 'enter' | 'ctrlEnter' }
     | { type: 'chat/state'; turns: ChatTurn[] }
     | { type: 'chat/turn'; turn: ChatTurn }
     | { type: 'chat/progress'; id: string; text: string }

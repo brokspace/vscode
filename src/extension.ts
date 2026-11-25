@@ -120,6 +120,11 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     );
     register('brokspace.openChat', () => chat.show());
     register('brokspace.openChatInEditor', () => chat.showInEditor());
+    register('brokspace.newChat', () => {
+        chat.newChat();
+        chat.show();
+    });
+    register('brokspace.stopChat', () => chat.stop());
     register('brokspace.ask', async (prompt?: unknown) => {
         if (typeof prompt === 'string' && prompt.trim()) {
             chat.show(prompt);
