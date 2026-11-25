@@ -440,12 +440,19 @@ export class ChatPanel extends BrokspaceWebview {
         if (!root) {
             return;
         }
+        // Brokspace's own exclusions apply to what is attached too.
+        const exclude = await this.model.brok
+            .config(root)
+            .then((config) => config.index?.exclude ?? [])
+            .catch(() => []);
         const found = await {
+            tabs: attach.openTabs,
+            folder: attach.pickFolder,
             file: attach.activeFile,
             selection: attach.selection,
             pick: attach.pickFiles,
             diagnostics: attach.diagnostics,
-        }[source](root);
+        }[source](root, exclude);
         for (const item of found.items) {
             // The same file or selection again replaces the earlier one instead of piling up.
             this.attached = [...this.attached.filter((existing) => existing.label !== item.label || existing.kind !== item.kind), item];

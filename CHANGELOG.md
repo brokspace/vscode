@@ -10,6 +10,7 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- More ways to attach context: the open tabs and a folder you pick (its first eight text files), both under the same rules as a single file, with a note of how many files were left out and why. Brokspace's own `index.exclude` now also keeps a file out of what is attached, besides Git's ignore rules and the credential filter.
 - Add a design and accessibility baseline to the webviews (#62)
 - Guide the first run with a checklist to a first answer (#60)
 

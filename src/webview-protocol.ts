@@ -43,7 +43,7 @@ export interface ContextChip {
     omitted: boolean;
 }
 
-export type ContextSource = 'file' | 'selection' | 'pick' | 'diagnostics';
+export type ContextSource = 'file' | 'selection' | 'pick' | 'diagnostics' | 'tabs' | 'folder';
 
 /** One question of the chat panel and its answer. */
 export interface ChatTurn {
