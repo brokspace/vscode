@@ -31,6 +31,7 @@ export function ChatApp({
     const [progress, setProgress] = React.useState<Record<string, string>>({});
     const [draft, setDraft] = React.useState('');
     const [chips, setChips] = React.useState<{ items: ContextChip[]; limit: number }>({ items: [], limit: 0 });
+    const [announcement, setAnnouncement] = React.useState('');
     const [, setState] = React.useState(host.state);
     const [guide, setGuide] = React.useState<{ progress: Progress; mcpEnabled: boolean }>({ progress: emptyProgress(), mcpEnabled: true });
     const [editor, setEditor] = React.useState<{ file?: string; selection: boolean; sendWith: 'enter' | 'ctrlEnter' }>({
@@ -65,6 +66,7 @@ export function ChatApp({
                         setTurns(msg.turns);
                         break;
                     case 'chat/turn':
+                        setAnnouncement(t('Brokspace is answering'));
                         setTurns((all) => [...all.filter((turn) => turn.id !== msg.turn.id), msg.turn]);
                         break;
                     case 'chat/progress':
@@ -77,6 +79,15 @@ export function ChatApp({
                         setTurns((all) => all.map((turn) => (turn.id === msg.id ? { ...turn, answer: turn.answer + msg.text } : turn)));
                         break;
                     case 'chat/done':
+                        setAnnouncement(
+                            msg.turn.error
+                                ? t('The answer failed: {0}', msg.turn.error)
+                                : msg.turn.cancelled
+                                  ? t('The answer was stopped')
+                                  : msg.turn.sources.length > 0
+                                    ? t('Answer ready, with {0} sources', msg.turn.sources.length)
+                                    : t('Answer ready'),
+                        );
                         setTurns((all) => all.map((turn) => (turn.id === msg.turn.id ? msg.turn : turn)));
                         break;
                 }
@@ -232,7 +243,10 @@ export function ChatApp({
                 />
             </header>
 
-            <main className="bk-chat-log" aria-live="polite">
+            <main className="bk-chat-log" role="log" aria-label={t('Conversation')} aria-live="off" aria-busy={running}>
+                <div className="bk-sr-only" role="status" aria-live="polite">
+                    {announcement}
+                </div>
                 {guiding && (
                     <Onboarding
                         host={host}

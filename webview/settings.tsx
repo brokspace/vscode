@@ -489,6 +489,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 <div className="bk-filters">
                     <input
                         className="theia-input bk-grow"
+                        aria-label={t('Filter memories')}
                         placeholder={t('Filter memories')}
                         value={this.memoryFilter}
                         spellCheck={false}
@@ -570,6 +571,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 <input
                     className="theia-input"
                     autoFocus
+                    aria-label={t('What to remember, in one line')}
                     placeholder={t('What to remember, in one line')}
                     value={draft.title}
                     onChange={(e) => set({ title: e.currentTarget.value })}
@@ -577,6 +579,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 <textarea
                     className="theia-input"
                     rows={4}
+                    aria-label={t('Details: why, where, what to watch out for (Markdown)')}
                     placeholder={t('Details: why, where, what to watch out for (Markdown)')}
                     value={draft.body}
                     onChange={(e) => set({ body: e.currentTarget.value })}
@@ -608,6 +611,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     </select>
                     <input
                         className="theia-input bk-grow"
+                        aria-label={t('Tags, separated by commas')}
                         placeholder={t('Tags, separated by commas')}
                         value={draft.tags}
                         onChange={(e) => set({ tags: e.currentTarget.value })}
@@ -747,6 +751,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                         <span>{t('Name')}</span>
                         <input
                             className="theia-input"
+                            aria-label="checkout"
                             placeholder="checkout"
                             value={draft.name}
                             onChange={(e) => set({ name: e.currentTarget.value })}
@@ -757,6 +762,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             <span>{t('Branch')}</span>
                             <input
                                 className="theia-input"
+                                aria-label="main"
                                 placeholder="main"
                                 value={draft.branch ?? ''}
                                 onChange={(e) => set({ branch: e.currentTarget.value })}
@@ -768,6 +774,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     <span>{t('How this workspace uses it (optional, helps the AI)')}</span>
                     <input
                         className="theia-input"
+                        aria-label={t('Carts and payments; we call its createOrder API')}
                         placeholder={t('Carts and payments; we call its createOrder API')}
                         value={draft.description ?? ''}
                         onChange={(e) => set({ description: e.currentTarget.value })}
@@ -1100,6 +1107,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                         <input
                             className="theia-input"
                             value={draft.title}
+                            aria-label={t('Review hangs on large diffs')}
                             placeholder={t('Review hangs on large diffs')}
                             onChange={(e) => set({ title: e.currentTarget.value })}
                         />
@@ -1267,6 +1275,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 key={`${key}:${value}`}
                 className="theia-input bk-text"
                 defaultValue={value}
+                aria-label={placeholder}
                 placeholder={placeholder}
                 spellCheck={false}
                 onBlur={(e) => commit(e.currentTarget)}
