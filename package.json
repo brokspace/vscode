@@ -169,6 +169,12 @@
         "icon": "$(comment-discussion)"
       },
       {
+        "command": "brokspace.getStarted",
+        "title": "%cmd.getStarted%",
+        "category": "Brokspace",
+        "icon": "$(checklist)"
+      },
+      {
         "command": "brokspace.newChat",
         "title": "%cmd.newChat%",
         "category": "Brokspace",

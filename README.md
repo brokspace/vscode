@@ -69,6 +69,8 @@ This is the only network access the extension itself makes; everything else goes
    and starts brok.
 3. Press `Ctrl+Alt+F` to search, or `Ctrl+Shift+Alt+B` to ask.
 
+The chat walks you through this with a checklist (**Brokspace: Get Started** shows it again). A model is optional: without one, search and answers from the index still work.
+
 Something wrong? **Brokspace: Doctor** shows `brok doctor`, and
 **Brokspace: Report a Bug** opens a prefilled GitHub issue with the
 diagnostics (secrets masked) in the right repository.

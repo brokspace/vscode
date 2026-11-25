@@ -291,12 +291,12 @@ export class Brok {
     }
 
     /** Any other command; never throws, the exit code says how it went. */
-    run(root: string, args: string[]): Promise<CommandResult> {
+    run(root: string, args: string[], signal?: AbortSignal): Promise<CommandResult> {
         return new Promise((resolve) => {
             execFile(
                 this.executable,
                 args,
-                { cwd: root, env: env(), maxBuffer: MAX_BUFFER, windowsHide: true },
+                { cwd: root, env: env(), maxBuffer: MAX_BUFFER, windowsHide: true, signal },
                 (error, stdout, stderr) => {
                     const code = error ? (typeof error.code === 'number' ? error.code : 1) : 0;
                     resolve({ code, stdout, stderr: stderr || (error && !stdout ? error.message : '') });

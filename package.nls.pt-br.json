@@ -16,6 +16,7 @@
   "welcome.shards": "Shards são pequenos programas e pacotes de skills que reagem ao seu workspace.\n[Instalar um Shard](command:brokspace.installShard)",
   "cmd.search": "Buscar no Workspace",
   "cmd.ask": "Perguntar ao Brokspace",
+  "cmd.getStarted": "Primeiros Passos",
   "cmd.newChat": "Nova Conversa",
   "cmd.stopChat": "Parar a Resposta",
   "config.sendWith": "Qual tecla envia uma mensagem do chat. A outra insere uma nova linha.",

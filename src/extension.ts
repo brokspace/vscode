@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     context.subscriptions.push(statusBar(model));
 
     /** Runs a brok command, shows its output, refreshes; offers a bug report when it fails. */
-    const runInOutput = async (title: string, args: string[], success?: string): Promise<boolean> => {
+    const runInOutput = async (title: string, args: string[], success?: string, cancellable = false): Promise<boolean> => {
         const root = model.root;
         if (!root) {
             void vscode.window.showWarningMessage(t('Open a folder first.'));
@@ -53,9 +53,20 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
         }
         output.show(true);
         output.appendLine(`\n${title}: brok ${args.join(' ')}`);
-        const result = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: `${title}…` }, () =>
-            model.brok.run(root, args),
+        const result = await vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title: `${title}…`, cancellable },
+            (_progress, token) => {
+                const abort = new AbortController();
+                token.onCancellationRequested(() => abort.abort());
+                return model.brok.run(root, args, abort.signal).then((done) => ({ ...done, cancelled: token.isCancellationRequested }));
+            },
         );
+        if (result.cancelled) {
+            output.appendLine(t('Cancelled. Nothing is lost: run it again to continue.'));
+            void model.refresh();
+            void vscode.window.showInformationMessage(t('{0} was cancelled. Run it again to continue.', title));
+            return false;
+        }
         for (const line of `${result.stdout}${result.stderr}`.split(/\r?\n/)) {
             if (line.trim()) {
                 output.appendLine(line);
@@ -125,6 +136,10 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
         chat.show();
     });
     register('brokspace.stopChat', () => chat.stop());
+    register('brokspace.getStarted', () => {
+        chat.getStarted();
+        chat.show();
+    });
     register('brokspace.ask', async (prompt?: unknown) => {
         if (typeof prompt === 'string' && prompt.trim()) {
             chat.show(prompt);
@@ -293,7 +308,7 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     );
 
     // ---------------------------------------------------------------- service, setup, shards
-    register('brokspace.setup', () => runInOutput(t('Setting up Brokspace'), ['init', '--yes'], t('Brokspace is ready.')));
+    register('brokspace.setup', () => runInOutput(t('Setting up Brokspace'), ['init', '--yes'], t('Brokspace is ready.'), true));
     register('brokspace.start', () => runQuiet(['start'], t('Brokspace started.')));
     register('brokspace.stop', () => runQuiet(['stop'], t('Brokspace stopped.')));
     register('brokspace.restart', () => runQuiet(['restart'], t('Brokspace restarted.')));
