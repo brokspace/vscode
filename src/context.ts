@@ -4,7 +4,7 @@ import { execFile } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { type ContextItem, isSensitivePath, makeItem } from './core/context';
+import { type ContextItem, excludedBy, filterDiff, isSensitivePath, makeItem } from './core/context';
 
 const t = vscode.l10n.t;
 
@@ -33,7 +33,12 @@ function gitIgnored(root: string, relative: string): Promise<boolean> {
  * Whether a file may be attached. Sensitive files and ignored files never
  * are; a file outside the workspace only when the user picked it.
  */
-async function check(root: string, uri: vscode.Uri, picked: boolean): Promise<{ label: string; external: boolean } | string> {
+async function check(
+    root: string,
+    uri: vscode.Uri,
+    picked: boolean,
+    exclude: string[],
+): Promise<{ label: string; external: boolean } | string> {
     if (uri.scheme !== 'file') {
         return t('Only files on disk can be attached.');
     }
@@ -45,14 +50,18 @@ async function check(root: string, uri: vscode.Uri, picked: boolean): Promise<{ 
     if (isSensitivePath(uri.fsPath)) {
         return t('{0} looks like it holds credentials, so it is never attached.', label);
     }
+    const glob = relative && excludedBy(relative, exclude);
+    if (glob) {
+        return t('{0} is excluded by index.exclude ({1}), so it is not attached.', label, glob);
+    }
     if (relative && (await gitIgnored(root, relative))) {
         return t('{0} is ignored by Git, so it is not attached.', label);
     }
     return { label, external: !relative };
 }
 
-async function fileItem(root: string, uri: vscode.Uri, picked: boolean): Promise<Attached> {
-    const allowed = await check(root, uri, picked);
+async function fileItem(root: string, uri: vscode.Uri, picked: boolean, exclude: string[]): Promise<Attached> {
+    const allowed = await check(root, uri, picked, exclude);
     if (typeof allowed === 'string') {
         return nothing(allowed);
     }
@@ -70,17 +79,17 @@ async function fileItem(root: string, uri: vscode.Uri, picked: boolean): Promise
     }
 }
 
-export async function activeFile(root: string): Promise<Attached> {
+export async function activeFile(root: string, exclude: string[] = []): Promise<Attached> {
     const editor = vscode.window.activeTextEditor;
-    return editor ? fileItem(root, editor.document.uri, false) : nothing(t('Open a file to attach it.'));
+    return editor ? fileItem(root, editor.document.uri, false, exclude) : nothing(t('Open a file to attach it.'));
 }
 
-export async function selection(root: string): Promise<Attached> {
+export async function selection(root: string, exclude: string[] = []): Promise<Attached> {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.selection.isEmpty) {
         return nothing(t('Select some code to attach it.'));
     }
-    const allowed = await check(root, editor.document.uri, false);
+    const allowed = await check(root, editor.document.uri, false, exclude);
     if (typeof allowed === 'string') {
         return nothing(allowed);
     }
@@ -89,7 +98,7 @@ export async function selection(root: string): Promise<Attached> {
     return { items: [makeItem(crypto.randomUUID(), 'selection', `${allowed.label}:${lines}`, editor.document.getText(editor.selection))] };
 }
 
-export async function pickFiles(root: string): Promise<Attached> {
+export async function pickFiles(root: string, exclude: string[] = []): Promise<Attached> {
     const picked = await vscode.window.showOpenDialog({
         canSelectMany: true,
         canSelectFiles: true,
@@ -100,7 +109,7 @@ export async function pickFiles(root: string): Promise<Attached> {
     const items: ContextItem[] = [];
     const problems: string[] = [];
     for (const uri of picked ?? []) {
-        const result = await fileItem(root, uri, true);
+        const result = await fileItem(root, uri, true, exclude);
         items.push(...result.items);
         if (result.problem) {
             problems.push(result.problem);
@@ -110,12 +119,12 @@ export async function pickFiles(root: string): Promise<Attached> {
 }
 
 /** The problems (errors and warnings) VS Code reports for the active file: opt-in context. */
-export async function diagnostics(root: string): Promise<Attached> {
+export async function diagnostics(root: string, exclude: string[] = []): Promise<Attached> {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
         return nothing(t('Open a file to attach its problems.'));
     }
-    const allowed = await check(root, editor.document.uri, false);
+    const allowed = await check(root, editor.document.uri, false, exclude);
     if (typeof allowed === 'string') {
         return nothing(allowed);
     }
@@ -130,4 +139,101 @@ export async function diagnostics(root: string): Promise<Attached> {
         return nothing(t('{0} has no errors or warnings.', allowed.label));
     }
     return { items: [makeItem(crypto.randomUUID(), 'diagnostics', t('Problems in {0}', allowed.label), lines.join('\n'))] };
+}
+
+/** The most files one "open tabs" or "folder" attach takes: the rest would only fill the budget. */
+const MAX_FILES = 8;
+
+/** The files open in the editor (tabs), as opt-in context. */
+export async function openTabs(root: string, exclude: string[] = []): Promise<Attached> {
+    const uris = vscode.window.tabGroups.all
+        .flatMap((group) => group.tabs)
+        .map((tab) => (tab.input instanceof vscode.TabInputText ? tab.input.uri : undefined))
+        .filter((uri): uri is vscode.Uri => !!uri && uri.scheme === 'file');
+    if (!uris.length) {
+        return nothing(t('No files are open in the editor.'));
+    }
+    return many(root, [...new Map(uris.map((uri) => [uri.toString(), uri])).values()], false, exclude);
+}
+
+/** A folder the user picks: its first text files, in path order, within the same rules. */
+export async function pickFolder(root: string, exclude: string[] = []): Promise<Attached> {
+    const picked = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        canSelectFiles: false,
+        canSelectFolders: true,
+        defaultUri: vscode.Uri.file(root),
+        openLabel: t('Attach'),
+    });
+    if (!picked?.[0]) {
+        return { items: [] };
+    }
+    const found = await vscode.workspace.findFiles(
+        new vscode.RelativePattern(picked[0], '**/*'),
+        '**/{node_modules,.git,dist,build,target}/**',
+        200,
+    );
+    const uris = found.sort((a, b) => a.fsPath.localeCompare(b.fsPath));
+    return many(root, uris, true, exclude);
+}
+
+/** Attaches up to MAX_FILES of them that pass the rules, and says how many were left out and why. */
+async function many(root: string, uris: vscode.Uri[], picked: boolean, exclude: string[]): Promise<Attached> {
+    const items: ContextItem[] = [];
+    let skipped = 0;
+    let rest = 0;
+    for (const uri of uris) {
+        if (items.length >= MAX_FILES) {
+            rest++;
+            continue;
+        }
+        const result = await fileItem(root, uri, picked, exclude);
+        if (result.items.length) {
+            items.push(...result.items);
+        } else {
+            skipped++;
+        }
+    }
+    const notes: string[] = [];
+    if (skipped) {
+        notes.push(t('{0} files were left out (credentials, ignored, excluded or not text).', skipped));
+    }
+    if (rest) {
+        notes.push(t('Only the first {0} files were attached; {1} more were not.', MAX_FILES, rest));
+    }
+    if (!items.length) {
+        notes.push(t('Nothing could be attached.'));
+    }
+    return { items, problem: notes.join(' ') || undefined };
+}
+
+/** The uncommitted changes (`git diff HEAD`) minus the files that may not be attached, as one item. */
+export async function gitDiff(root: string, exclude: string[] = []): Promise<Attached> {
+    const diff = await new Promise<string | undefined>((resolve) => {
+        execFile(
+            'git',
+            ['diff', 'HEAD', '--no-color', '--no-ext-diff'],
+            { cwd: root, windowsHide: true, maxBuffer: 4_000_000 },
+            (error, stdout) => resolve(error ? undefined : stdout),
+        );
+    });
+    if (diff === undefined) {
+        return nothing(t('No Git changes could be read here.'));
+    }
+    if (!diff.trim()) {
+        return nothing(t('There are no uncommitted changes.'));
+    }
+    const paths = [...diff.matchAll(/^diff --git a\/.+? b\/(.+)$/gm)].map((match) => match[1] as string);
+    const refused = new Set<string>();
+    for (const file of paths) {
+        if (isSensitivePath(file) || excludedBy(file, exclude) || (await gitIgnored(root, file))) {
+            refused.add(file);
+        }
+    }
+    const { text, kept } = filterDiff(diff, (file) => !refused.has(file));
+    if (!kept.length) {
+        return nothing(t('The changed files may not be attached (credentials, ignored or excluded).'));
+    }
+    const note = refused.size ? t('{0} files were left out (credentials, ignored, excluded or not text).', refused.size) : undefined;
+    return { items: [makeItem(crypto.randomUUID(), 'diff', t('Uncommitted changes ({0} files)', kept.length), text)], problem: note };
 }

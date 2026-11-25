@@ -6,10 +6,20 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-25
+
+### Added
+
+- Polish the chat header, composer and message footer (#68)
+- Attach open tabs and folders and honor index.exclude (#66)
+- Add a navigation menu and the workspace to the chat header (#65)
+
 ## [0.4.0] - 2026-11-25
 
 ### Added
 
+- Chat polish: the header drops the duplicate settings gear and shows the model as a pill that switches between your configured providers (or asks the index alone once); with no model it reads "Index-only · Connect LLM" and opens the model setup. The navigation menu is now labeled **Tools**. The composer is one box: attached context sits inside it as pills, a **+ Context** menu offers the active file, selection, uncommitted Git changes, a folder, open tabs, problems and picked files (with quick buttons for the file and the selection), `@` in the box does the same from the keyboard, and Send turns into Stop while an answer streams. Sources show `file.ts:12-48 · symbol` with the folder muted, and every answer ends with Copy, Retry and the model that wrote it. Git changes never include credential, ignored or excluded files.
+- More ways to attach context: the open tabs and a folder you pick (its first eight text files), both under the same rules as a single file, with a note of how many files were left out and why. Brokspace's own `index.exclude` now also keeps a file out of what is attached, besides Git's ignore rules and the credential filter.
 - Add a design and accessibility baseline to the webviews (#62)
 - Guide the first run with a checklist to a first answer (#60)
 

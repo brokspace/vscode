@@ -174,6 +174,9 @@ abstract class BrokspaceWebview implements vscode.Disposable {
                 return this.memory.forget(params[0] as Parameters<MemoryStore['forget']>[0]);
             case 'reloadMemories':
                 return this.memory.reload();
+            case 'copy':
+                await vscode.env.clipboard.writeText(String(params[0] ?? ''));
+                return undefined;
             case 'refresh':
                 await this.model.refresh();
                 return undefined;
@@ -440,12 +443,20 @@ export class ChatPanel extends BrokspaceWebview {
         if (!root) {
             return;
         }
+        // Brokspace's own exclusions apply to what is attached too.
+        const exclude = await this.model.brok
+            .config(root)
+            .then((config) => config.index?.exclude ?? [])
+            .catch(() => []);
         const found = await {
+            diff: attach.gitDiff,
+            tabs: attach.openTabs,
+            folder: attach.pickFolder,
             file: attach.activeFile,
             selection: attach.selection,
             pick: attach.pickFiles,
             diagnostics: attach.diagnostics,
-        }[source](root);
+        }[source](root, exclude);
         for (const item of found.items) {
             // The same file or selection again replaces the earlier one instead of piling up.
             this.attached = [...this.attached.filter((existing) => existing.label !== item.label || existing.kind !== item.kind), item];

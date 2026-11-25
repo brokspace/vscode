@@ -32,7 +32,7 @@ export interface ShowOptions {
 /** One piece of attached context as the composer shows it (never its content). */
 export interface ContextChip {
     id: string;
-    kind: 'file' | 'selection' | 'diagnostics';
+    kind: 'file' | 'selection' | 'diagnostics' | 'diff';
     label: string;
     persistent: boolean;
     chars: number;
@@ -43,7 +43,7 @@ export interface ContextChip {
     omitted: boolean;
 }
 
-export type ContextSource = 'file' | 'selection' | 'pick' | 'diagnostics';
+export type ContextSource = 'file' | 'selection' | 'pick' | 'diagnostics' | 'tabs' | 'folder' | 'diff';
 
 /** One question of the chat panel and its answer. */
 export interface ChatTurn {

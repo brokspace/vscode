@@ -53,6 +53,14 @@ The sidebar chat is the full experience; the participant is a convenient way in 
 - **Guardrails on attached context:** files that hold credentials and files Git ignores are never attached; secrets in text are masked; each item and the total are size-bounded; a file outside the workspace is attached only when you pick it. Context reaches the model only with the question you send.
 - **No LLM configured:** nothing is sent anywhere; search and index answers still work.
 
+## A look at it
+
+| First run                                                                                             | A conversation                                                                                     | Navigation                                                                          |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ![The getting-started checklist in the Brokspace sidebar, dark theme](docs/images/first-run-dark.png) | ![An answer with its context, activity and sources, dark theme](docs/images/conversation-dark.png) | ![The model menu of the chat header, light theme](docs/images/model-menu-light.png) |
+
+_Rendered from the extension's own UI with sample data (`python3 scripts/screenshots.py`; dark, light and narrow variants are in `docs/images`)._
+
 ## Requirements
 
 - [brok](https://brokspace.org/docs/getting-started) 0.4.0 or newer. The extension finds

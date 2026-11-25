@@ -13,7 +13,7 @@ import type { ConversationTurn } from './protocol';
 export const MAX_ITEM_CHARS = 12_000;
 export const MAX_TOTAL_CHARS = 40_000;
 
-export type ContextKind = 'file' | 'selection' | 'diagnostics';
+export type ContextKind = 'file' | 'selection' | 'diagnostics' | 'diff';
 
 export interface ContextItem {
     id: string;
@@ -51,6 +51,38 @@ export function isSensitivePath(path: string): boolean {
             'secrets.yaml',
         ].includes(name)
     );
+}
+
+/** A glob of `index.exclude` as a regular expression: `*` inside a name, `**` across folders. */
+function globToRegExp(glob: string): RegExp {
+    const body = glob
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*\/?/g, '\uE000')
+        .replace(/\*/g, '[^/]*')
+        .replace(/\?/g, '[^/]')
+        .replace(/\uE000/g, '(?:.*/)?');
+    return new RegExp(`^${body}$`);
+}
+
+/**
+ * The `index.exclude` glob that leaves a workspace file out of Brokspace, if
+ * any. A pattern without a slash matches a name at any depth, and one that
+ * names a folder matches everything under it, like brok's own rule.
+ */
+export function excludedBy(relative: string, globs: string[]): string | undefined {
+    const path = relative.replace(/\\/g, '/');
+    const parts = path.split('/');
+    return globs.find((glob) => {
+        const pattern = glob.replace(/^\.?\//, '').replace(/\/$/, '');
+        if (!pattern) {
+            return false;
+        }
+        const regex = globToRegExp(pattern);
+        if (!pattern.includes('/')) {
+            return parts.some((part) => regex.test(part));
+        }
+        return parts.some((_, index) => regex.test(parts.slice(0, index + 1).join('/')));
+    });
 }
 
 const PRIVATE_KEY = /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(-----END [A-Z ]*PRIVATE KEY-----|$)/g;
@@ -95,6 +127,28 @@ export function bound(text: string, max: number): { text: string; truncated: boo
     const cut = text.slice(0, max);
     const kept = cut.slice(0, Math.max(cut.lastIndexOf('\n'), max / 2));
     return { text: `${kept}\n… [${text.length - kept.length} more characters not attached]`, truncated: true };
+}
+
+/**
+ * A unified diff without the files `keep` refuses (credentials, ignored,
+ * excluded): split at each `diff --git`, so one refused file never hides the rest.
+ */
+export function filterDiff(diff: string, keep: (path: string) => boolean): { text: string; kept: string[]; dropped: string[] } {
+    const kept: string[] = [];
+    const dropped: string[] = [];
+    const parts = diff.split(/^(?=diff --git )/m).filter(Boolean);
+    const text = parts
+        .filter((part) => {
+            const path = /^diff --git a\/(.+?) b\/(.+)$/m.exec(part)?.[2];
+            if (!path) {
+                return false;
+            }
+            const ok = keep(path);
+            (ok ? kept : dropped).push(path);
+            return ok;
+        })
+        .join('');
+    return { text, kept, dropped };
 }
 
 /** An item from raw text: secrets hidden, then bounded. */
