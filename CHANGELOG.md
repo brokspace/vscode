@@ -6,10 +6,19 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-25
+
+### Added
+
+- Add a design and accessibility baseline to the webviews (#62)
+- Guide the first run with a checklist to a first answer (#60)
+
 ## [0.3.0] - 2026-11-25
 
 ### Added
 
+- A design and accessibility baseline for the chat, history, settings and first-run checklist: one focus ring for every control, answers announced to screen readers when they start and finish (instead of reading a streamed answer word by word), motion that follows the reduced-motion preference, borders in high-contrast themes, a layout that holds in a narrow sidebar and a wide editor tab, and accessible names on every field. Tokens and components are documented in `docs/design-system.md`.
+- A guided first run in the chat: a short checklist from how your data is handled, through brok, the folder and the workspace setup, to your first question, with optional steps (a model, a memory, MCP, a linked repository) that you can skip and resume. Each step follows the real state, so an existing brok, workspace or model is detected and kept, and someone who already has a model configured is not guided. Setting up the folder shows progress and can be cancelled and run again. A first answer (even from the index alone, with no model) completes it, hide it any time, and **Brokspace: Get Started** shows it again. Your choices are kept per workspace across restarts. Downloading brok still asks first, and offline or package-manager users get the install guide.
 - Activity under each answer: an expandable list of the steps the assistant took (attached context, searching the index, asking your model, running a skill, saving a note) with their state, duration and the files or memories each read or changed, and a label that says whether a step only reads, sends your question to your LLM, or changes something. A step cut short by closing the window shows as stopped. Saving a note with `/remember` is the one write today and goes through an approval gate (typing the command is the approval); the gate runs an action once, never repeats a succeeded one, and reports one cancelled mid-way as such.
 - A friendlier chat composer: typing `/` opens a menu of commands with descriptions (`/review`, `/review staged`, `/review base <ref>`, `/skill <name> <task>` with your skills listed, and the new `/search` and `/remember`), navigable with the arrow keys, Tab and Enter and announced to screen readers. Suggestions fill the box and never send. With code selected or a file open, the empty chat offers to explain it. Up and Down walk the earlier prompts from an empty box. `brokspace.chat.sendWith` chooses Enter or Ctrl/Cmd+Enter to send. New commands **Brokspace: New Chat** (`Ctrl+Alt+N`, `Cmd+Alt+N` on macOS, with the chat focused) and **Stop the Answer**; Escape stops an answer from the box.
 - Attach context to a question: buttons above the composer add the active file, the selected code, files you pick, or the active file's errors and warnings. They show as chips before you send, with what was done to them (shortened, secrets hidden, left out). A chip is for the next question only, or pinned for the whole conversation. Files that hold credentials and files Git ignores are never attached, a file outside the workspace only when you pick it, secrets in the text are hidden, and each item and the total are bounded. The attached context reaches your LLM only with the question you send.

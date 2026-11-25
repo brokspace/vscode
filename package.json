@@ -2,7 +2,7 @@
   "name": "brokspace",
   "displayName": "Brokspace: Local AI Code Search & Memory",
   "description": "%description%",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "brokspace",
   "license": "MIT OR Apache-2.0",
   "icon": "media/icon.png",
@@ -167,6 +167,12 @@
         "title": "%cmd.openChat%",
         "category": "Brokspace",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "brokspace.getStarted",
+        "title": "%cmd.getStarted%",
+        "category": "Brokspace",
+        "icon": "$(checklist)"
       },
       {
         "command": "brokspace.newChat",

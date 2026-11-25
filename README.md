@@ -18,17 +18,40 @@ _Searching by meaning with `Ctrl+Alt+F`, in the brok repository itself, with tex
 
 ## What's inside
 
-|                                  |                                                                                                                                                                                                                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Search** (`Ctrl+Alt+F`)        | Semantic and keyword search across the workspace and its linked workspaces, as you type.                                                                                                                                                                                  |
-| **Chat** (`Ctrl+Shift+Alt+B`)    | The first view of the Brokspace sidebar (or an editor tab: **Open Chat in the Editor**). Questions about the code, answered by your LLM through brok, with the sources. `/review`, `/review staged`, `/skill <name> <task>`. Without an LLM, answers come from the index. |
-| **`@brokspace` in Copilot Chat** | The same agent as a chat participant, where the editor has the Chat API.                                                                                                                                                                                                  |
-| **Memory** (`Ctrl+Alt+M`)        | Remember a decision, a convention or the selected code; browse, search and forget memories in the sidebar. Chats can be saved as session memories.                                                                                                                        |
-| **Linked workspaces**            | Link a local folder or a Git repository (for example the `checkout` service your `user` service calls) and search both.                                                                                                                                                   |
-| **Review and commit messages**   | Review the working tree or the staged changes; write the commit message from the Source Control title bar.                                                                                                                                                                |
-| **Skills and shards**            | Run skills, install and remove shards, export skills to your agents.                                                                                                                                                                                                      |
-| **MCP**                          | Registers brok's MCP server, so Copilot agent mode and other MCP clients get Brokspace search and memory.                                                                                                                                                                 |
-| **Settings** (`Ctrl+Alt+,`)      | Model and providers, memory, linked workspaces, metrics, diagnostics and bug reports, in one page.                                                                                                                                                                        |
+|                                  |                                                                                                                                                                                                                                                                                                                                               |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Search** (`Ctrl+Alt+F`)        | Semantic and keyword search across the workspace and its linked workspaces, as you type.                                                                                                                                                                                                                                                      |
+| **Chat** (`Ctrl+Shift+Alt+B`)    | The first view of the Brokspace sidebar (or an editor tab). Ask about the code and get answers from your LLM with their sources; attach files, a selection or errors as context; type `/` for commands; see what the assistant did under each answer; resume earlier chats from the History tab. Without an LLM, answers come from the index. |
+| **`@brokspace` in Copilot Chat** | The same agent as a chat participant, where the editor has the Chat API.                                                                                                                                                                                                                                                                      |
+| **Memory** (`Ctrl+Alt+M`)        | Remember a decision, a convention or the selected code; browse, search and forget memories in the sidebar. Chats can be saved as session memories.                                                                                                                                                                                            |
+| **Linked workspaces**            | Link a local folder or a Git repository (for example the `checkout` service your `user` service calls) and search both.                                                                                                                                                                                                                       |
+| **Review and commit messages**   | Review the working tree or the staged changes; write the commit message from the Source Control title bar.                                                                                                                                                                                                                                    |
+| **Skills and shards**            | Run skills, install and remove shards, export skills to your agents.                                                                                                                                                                                                                                                                          |
+| **MCP**                          | Registers brok's MCP server, so Copilot agent mode and other MCP clients get Brokspace search and memory.                                                                                                                                                                                                                                     |
+| **Settings** (`Ctrl+Alt+,`)      | Model and providers, memory, linked workspaces, metrics, diagnostics and bug reports, in one page.                                                                                                                                                                                                                                            |
+
+## Chat in the sidebar and `@brokspace` in Copilot Chat
+
+Both use the same brok, index and memories, but they are not the same surface.
+
+|                        | Brokspace chat (sidebar or editor tab)                                                        | `@brokspace` in Copilot Chat                          |
+| ---------------------- | --------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| Where                  | The Brokspace activity-bar icon, or **Open Chat in the Editor**                               | The editor's own chat view, where it has the Chat API |
+| Needs                  | Only this extension and brok                                                                  | An editor with the Chat API (VS Code, not every fork) |
+| Context                | Attach the active file, the selection, picked files or errors, shown as chips before you send | What the editor's chat gives it                       |
+| History                | A History tab per workspace: search, resume, rename, delete                                   | The editor chat's own history                         |
+| Activity               | The steps taken under each answer                                                             | The editor's own display                              |
+| Settings and first run | In the same sidebar, with a getting-started checklist                                         | Open the Brokspace sidebar                            |
+| Commands               | `/review`, `/review staged`, `/skill`, `/search`, `/remember`                                 | The same commands                                     |
+
+The sidebar chat is the full experience; the participant is a convenient way in when you already live in Copilot Chat.
+
+## What stays local and what is sent
+
+- **Local:** the index, the memories, the chat history of a workspace (in the workspace's own storage) and everything search does. The extension itself makes one network request, the optional brok download from GitHub, and only after you agree.
+- **Sent to your model:** when you ask for an answer, a review or a commit message, brok sends your question, the passages it retrieved, the recent turns of the conversation and any context you attached to the LLM provider you configured. A local provider (Ollama, LM Studio) keeps that on your machine; a hosted one receives it.
+- **Guardrails on attached context:** files that hold credentials and files Git ignores are never attached; secrets in text are masked; each item and the total are size-bounded; a file outside the workspace is attached only when you pick it. Context reaches the model only with the question you send.
+- **No LLM configured:** nothing is sent anywhere; search and index answers still work.
 
 ## Requirements
 
@@ -69,9 +92,15 @@ This is the only network access the extension itself makes; everything else goes
    and starts brok.
 3. Press `Ctrl+Alt+F` to search, or `Ctrl+Shift+Alt+B` to ask.
 
+The chat walks you through this with a checklist (**Brokspace: Get Started** shows it again). A model is optional: without one, search and answers from the index still work.
+
 Something wrong? **Brokspace: Doctor** shows `brok doctor`, and
 **Brokspace: Report a Bug** opens a prefilled GitHub issue with the
 diagnostics (secrets masked) in the right repository.
+
+## Roadmap
+
+The chat-first experience is tracked in [brokspace/vscode issues](https://github.com/brokspace/vscode/issues): the chat as the first view (#40), settings in the sidebar (#41), conversation history (#42), context attachments (#43), the composer (#44), agent activity and approvals (#45), guided first run (#46), design and accessibility (#47) and these docs (#48). Diff previews and approvals for edits (#45) wait for brok to report tool events.
 
 ## Settings
 
@@ -157,7 +186,7 @@ Releases: the Promote workflow opens the `staging` to `main` PR; after it merges
 `package.json`) on `main` and the Release workflow packages, attaches the VSIX and publishes. Setup of the
 publishing accounts is in the brok repository, `docs/publishing.md`.
 
-Contributor and agent guide: [AGENTS.md](AGENTS.md).
+Contributor and agent guide: [AGENTS.md](AGENTS.md). UI tokens, components and accessibility rules: [docs/design-system.md](docs/design-system.md).
 
 ## License
 

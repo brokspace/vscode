@@ -711,3 +711,187 @@ body.page-settings #root {
     list-style: none;
     overflow-wrap: anywhere;
 }
+
+/* Guided first run */
+.bk-onboarding {
+    margin: 8px 0 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--vscode-widget-border, var(--vscode-panel-border));
+    border-radius: 6px;
+    background: var(--vscode-editorWidget-background);
+}
+.bk-onboarding-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.bk-onboarding-head h2 {
+    flex: 1;
+    margin: 0;
+    font-size: 1.1em;
+}
+.bk-onboarding-count,
+.bk-onboarding-hint,
+.bk-guide-state {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+.bk-onboarding-bar {
+    width: 100%;
+    height: 4px;
+    margin: 6px 0 10px;
+}
+.bk-onboarding-sub {
+    margin: 12px 0 4px;
+    font-size: 0.95em;
+}
+.bk-guides {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.bk-guide {
+    padding: 4px 0;
+}
+.bk-guide-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.bk-guide-title {
+    flex: 1;
+}
+.bk-guide-done .codicon {
+    color: var(--vscode-testing-iconPassed, var(--vscode-charts-green));
+}
+.bk-guide-current .codicon {
+    color: var(--vscode-focusBorder);
+}
+.bk-guide-current .bk-guide-title {
+    font-weight: 600;
+}
+.bk-guide-skipped .bk-guide-title {
+    color: var(--vscode-descriptionForeground);
+}
+.bk-guide-body {
+    margin: 4px 0 6px 22px;
+}
+.bk-guide-body p {
+    margin: 0 0 6px;
+}
+.bk-onboarding .bk-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+.bk-button-secondary {
+    background: var(--vscode-button-secondaryBackground);
+    color: var(--vscode-button-secondaryForeground);
+}
+
+/* ---------------------------------------------------------------- accessibility baseline
+   One focus ring for everything that takes the keyboard, motion that follows
+   the system preference, borders where a high-contrast theme needs them, and
+   a layout that holds in a narrow sidebar. See docs/design-system.md. */
+
+:root {
+    --bk-focus: var(--vscode-focusBorder);
+    --bk-border: var(--vscode-widget-border, var(--vscode-panel-border, transparent));
+    --bk-motion: 120ms;
+}
+
+:where(button, a, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--bk-focus);
+    outline-offset: 1px;
+}
+
+/* Text boxes show focus on their own frame, not twice. */
+.bk-chat-input textarea:focus-visible {
+    outline: none;
+}
+
+.bk-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* The chip, card and button edges a high-contrast theme draws. */
+body.vscode-high-contrast .bk-onboarding,
+body.vscode-high-contrast-light .bk-onboarding,
+body.vscode-high-contrast .bk-button,
+body.vscode-high-contrast-light .bk-button,
+body.vscode-high-contrast .bk-suggestion,
+body.vscode-high-contrast-light .bk-suggestion {
+    border: 1px solid var(--vscode-contrastBorder, var(--vscode-focusBorder));
+}
+
+body.vscode-high-contrast .bk-workspace-tab-on,
+body.vscode-high-contrast-light .bk-workspace-tab-on {
+    border-bottom-width: 3px;
+}
+
+@media (forced-colors: active) {
+    .bk-icon-button,
+    .bk-workspace-tab,
+    .bk-suggestion {
+        border: 1px solid ButtonText;
+        forced-color-adjust: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    /* A spinner that stops is still a status: keep a static glyph. */
+    .codicon-modifier-spin {
+        animation: none !important;
+    }
+}
+
+/* A narrow sidebar: the tabs keep their icons and lose their words (the names
+   stay for screen readers), buttons wrap, and indents shrink. */
+.bk-workspace,
+.bk-chat {
+    container-type: inline-size;
+}
+
+@container (max-width: 300px) {
+    .bk-workspace-tab {
+        padding: var(--bk-space-1);
+        font-size: 0;
+    }
+    .bk-workspace-tab .codicon {
+        font-size: var(--bk-icon);
+    }
+    .bk-guide-body {
+        margin-left: 0;
+    }
+    .bk-onboarding {
+        padding: var(--bk-space-2);
+    }
+    .bk-buttons {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+/* A wide editor tab keeps lines readable instead of stretching across the screen. */
+@container (min-width: 900px) {
+    .bk-chat-log {
+        max-width: 90ch;
+        margin-inline: auto;
+    }
+}

@@ -4,10 +4,12 @@ import MarkdownIt from 'markdown-it';
 import * as React from 'react';
 import { type ActivityStep, duration } from '../src/core/activity';
 import { matchSlash, type SlashEntry, stepHistory } from '../src/core/composer';
+import { emptyProgress, isActive, type Progress } from '../src/core/onboarding';
 import type { SkillInfo } from '../src/core/protocol';
 import { cite, formatMs } from '../src/core/text';
 import type { ChatTurn, ContextChip, ContextSource, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
+import { Onboarding } from './onboarding';
 
 // No raw HTML from the model; links open outside (see `onClick`).
 const markdown = new MarkdownIt({ html: false, linkify: true, breaks: false });
@@ -29,7 +31,9 @@ export function ChatApp({
     const [progress, setProgress] = React.useState<Record<string, string>>({});
     const [draft, setDraft] = React.useState('');
     const [chips, setChips] = React.useState<{ items: ContextChip[]; limit: number }>({ items: [], limit: 0 });
+    const [announcement, setAnnouncement] = React.useState('');
     const [, setState] = React.useState(host.state);
+    const [guide, setGuide] = React.useState<{ progress: Progress; mcpEnabled: boolean }>({ progress: emptyProgress(), mcpEnabled: true });
     const [editor, setEditor] = React.useState<{ file?: string; selection: boolean; sendWith: 'enter' | 'ctrlEnter' }>({
         selection: false,
         sendWith: 'enter',
@@ -49,6 +53,9 @@ export function ChatApp({
                     case 'state':
                         setState(host.state);
                         break;
+                    case 'onboarding/state':
+                        setGuide({ progress: msg.progress, mcpEnabled: msg.mcpEnabled });
+                        break;
                     case 'editor/state':
                         setEditor({ file: msg.file, selection: msg.selection, sendWith: msg.sendWith });
                         break;
@@ -59,6 +66,7 @@ export function ChatApp({
                         setTurns(msg.turns);
                         break;
                     case 'chat/turn':
+                        setAnnouncement(t('Brokspace is answering'));
                         setTurns((all) => [...all.filter((turn) => turn.id !== msg.turn.id), msg.turn]);
                         break;
                     case 'chat/progress':
@@ -71,6 +79,15 @@ export function ChatApp({
                         setTurns((all) => all.map((turn) => (turn.id === msg.id ? { ...turn, answer: turn.answer + msg.text } : turn)));
                         break;
                     case 'chat/done':
+                        setAnnouncement(
+                            msg.turn.error
+                                ? t('The answer failed: {0}', msg.turn.error)
+                                : msg.turn.cancelled
+                                  ? t('The answer was stopped')
+                                  : msg.turn.sources.length > 0
+                                    ? t('Answer ready, with {0} sources', msg.turn.sources.length)
+                                    : t('Answer ready'),
+                        );
                         setTurns((all) => all.map((turn) => (turn.id === msg.turn.id ? msg.turn : turn)));
                         break;
                 }
@@ -86,6 +103,7 @@ export function ChatApp({
     }, []);
 
     const running = turns.some((turn) => !turn.done);
+    const guiding = isActive(host.state, guide.progress) && turns.length === 0;
     const ready = host.state.kind === 'ready';
     const send = (text: string) => {
         if (!text.trim() || running) {
@@ -192,7 +210,7 @@ export function ChatApp({
             }
         }
     };
-    const openSettings = (section: SettingsSection) =>
+    const openSettings = (section: SettingsSection = 'overview') =>
         onOpenSettings ? onOpenSettings(section) : host.command('brokspace.settings', section);
     const llm = host.state.kind === 'ready' ? host.state.status.llm?.model : undefined;
 
@@ -225,8 +243,20 @@ export function ChatApp({
                 />
             </header>
 
-            <main className="bk-chat-log" aria-live="polite">
-                {!ready && (
+            <main className="bk-chat-log" role="log" aria-label={t('Conversation')} aria-live="off" aria-busy={running}>
+                <div className="bk-sr-only" role="status" aria-live="polite">
+                    {announcement}
+                </div>
+                {guiding && (
+                    <Onboarding
+                        host={host}
+                        progress={guide.progress}
+                        mcpEnabled={guide.mcpEnabled}
+                        onOpenSettings={openSettings}
+                        onSuggest={(text) => suggest(text)}
+                    />
+                )}
+                {!ready && !guiding && (
                     <div className="bk-chat-empty">
                         <p>{t('Brokspace is not ready in this folder yet.')}</p>
                         <button type="button" className="bk-button" onClick={() => host.command('workbench.view.extension.brokspace')}>
