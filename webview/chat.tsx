@@ -314,7 +314,9 @@ export function ChatApp({
                         [
                             ['file', 'file-code', t('Attach the active file')],
                             ['selection', 'list-selection', t('Attach the selected code')],
-                            ['pick', 'folder-opened', t('Pick files to attach')],
+                            ['pick', 'files', t('Pick files to attach')],
+                            ['folder', 'folder-opened', t('Pick a folder to attach')],
+                            ['tabs', 'multiple-windows', t('Attach the open tabs')],
                             ['diagnostics', 'warning', t('Attach the problems of the active file')],
                         ] as [ContextSource, string, string][]
                     ).map(([source, icon, label]) => (

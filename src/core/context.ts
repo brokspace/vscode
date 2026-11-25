@@ -53,6 +53,38 @@ export function isSensitivePath(path: string): boolean {
     );
 }
 
+/** A glob of `index.exclude` as a regular expression: `*` inside a name, `**` across folders. */
+function globToRegExp(glob: string): RegExp {
+    const body = glob
+        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+        .replace(/\*\*\/?/g, '\uE000')
+        .replace(/\*/g, '[^/]*')
+        .replace(/\?/g, '[^/]')
+        .replace(/\uE000/g, '(?:.*/)?');
+    return new RegExp(`^${body}$`);
+}
+
+/**
+ * The `index.exclude` glob that leaves a workspace file out of Brokspace, if
+ * any. A pattern without a slash matches a name at any depth, and one that
+ * names a folder matches everything under it, like brok's own rule.
+ */
+export function excludedBy(relative: string, globs: string[]): string | undefined {
+    const path = relative.replace(/\\/g, '/');
+    const parts = path.split('/');
+    return globs.find((glob) => {
+        const pattern = glob.replace(/^\.?\//, '').replace(/\/$/, '');
+        if (!pattern) {
+            return false;
+        }
+        const regex = globToRegExp(pattern);
+        if (!pattern.includes('/')) {
+            return parts.some((part) => regex.test(part));
+        }
+        return parts.some((_, index) => regex.test(parts.slice(0, index + 1).join('/')));
+    });
+}
+
 const PRIVATE_KEY = /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?(-----END [A-Z ]*PRIVATE KEY-----|$)/g;
 const TOKENS = [
     /\bAKIA[0-9A-Z]{16}\b/g,
