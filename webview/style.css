@@ -629,3 +629,39 @@ body.page-settings #root {
     color: var(--vscode-descriptionForeground);
     font-size: 0.9em;
 }
+
+/* ------------------------------------------------------------ slash menu */
+
+.bk-slash {
+    margin: 0 var(--bk-space-4) var(--bk-space-1);
+    padding: var(--bk-space-1);
+    list-style: none;
+    max-height: 40vh;
+    overflow-y: auto;
+    border: 1px solid var(--vscode-editorSuggestWidget-border, var(--theia-widget-border));
+    border-radius: var(--bk-radius);
+    background: var(--vscode-editorSuggestWidget-background, var(--vscode-editor-background));
+}
+
+.bk-slash-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--bk-space-1) var(--bk-space-2);
+    border-radius: var(--bk-radius-sm);
+    cursor: pointer;
+}
+
+.bk-slash-item span {
+    color: var(--vscode-descriptionForeground);
+    font-size: 0.9em;
+}
+
+.bk-slash-on {
+    background: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
+}
+
+.bk-slash-on span {
+    color: inherit;
+}

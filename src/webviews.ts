@@ -1,10 +1,12 @@
 // Brokspace for VS Code. SPDX-License-Identifier: MIT OR Apache-2.0
 
 import * as crypto from 'node:crypto';
+import * as path from 'node:path';
 import * as vscode from 'vscode';
-import { answer } from './chat';
+import { type Answered, type AnswerSink, answer, sourceOf } from './chat';
 import * as attach from './context';
 import { message } from './core/brok';
+import { type LocalCommand, parseLocalCommand } from './core/composer';
 import { type ContextItem, chipOf, contextTurns, MAX_TOTAL_CHARS, withinBudget } from './core/context';
 import type { BugInput } from './core/protocol';
 import {
@@ -143,6 +145,8 @@ abstract class BrokspaceWebview implements vscode.Disposable {
         const brok = this.model.brok;
         const root = this.model.root ?? '';
         switch (method) {
+            case 'skills':
+                return root ? brok.skills(root) : [];
             case 'config':
                 return brok.config(root);
             case 'setConfig':
@@ -230,6 +234,33 @@ export class ChatPanel extends BrokspaceWebview {
     constructor(context: vscode.ExtensionContext, model: BrokspaceModel, memory: MemoryStore) {
         super(context, model, memory, 'chat', t('Brokspace Chat'));
         this.history = readHistory(context.workspaceState.get(HISTORY_KEY));
+        this.disposables.push(
+            vscode.window.onDidChangeActiveTextEditor(() => this.postEditor()),
+            vscode.window.onDidChangeTextEditorSelection(() => this.postEditor()),
+            vscode.workspace.onDidChangeConfiguration((event) => event.affectsConfiguration('brokspace.chat') && this.postEditor()),
+        );
+    }
+
+    /** What the composer needs to know about the editor: the active file, a selection, the send shortcut. */
+    protected postEditor(): void {
+        const editor = vscode.window.activeTextEditor;
+        const root = this.model.root;
+        const relative =
+            editor && root && editor.document.uri.scheme === 'file' ? path.relative(root, editor.document.uri.fsPath) : undefined;
+        const file = relative && !relative.startsWith('..') && !path.isAbsolute(relative) ? relative.split(path.sep).join('/') : undefined;
+        const sendWith =
+            vscode.workspace.getConfiguration('brokspace').get<string>('chat.sendWith') === 'ctrlEnter' ? 'ctrlEnter' : 'enter';
+        this.post({ type: 'editor/state', file, selection: !!editor && !editor.selection.isEmpty && file !== undefined, sendWith });
+    }
+
+    /** Starts a new conversation (the command, the composer's button). */
+    newChat(): void {
+        this.reset();
+    }
+
+    /** Stops the answer that is being written. */
+    stop(): void {
+        this.running?.cancel();
     }
 
     /** The saved conversations of this workspace (workspace storage: another workspace never sees them). */
@@ -364,6 +395,7 @@ export class ChatPanel extends BrokspaceWebview {
     protected override onReady(): void {
         this.post({ type: 'chat/state', turns: this.turns });
         this.postContext();
+        this.postEditor();
     }
 
     /** Context attached to the conversation: shown as chips before anything is sent. */
@@ -424,6 +456,33 @@ export class ChatPanel extends BrokspaceWebview {
         }
     }
 
+    /** `/search` and `/remember`: answered here, without the LLM. */
+    protected async runLocal(local: LocalCommand, sink: AnswerSink): Promise<Answered> {
+        const root = this.model.root;
+        if (!root || !this.model.ready) {
+            throw new Error(t('Set up Brokspace in this folder first: Brokspace: Set Up Workspace.'));
+        }
+        if (!local.argument) {
+            const text =
+                local.command === 'search'
+                    ? t('What should I look for? `/search where do we validate tokens`')
+                    : t('Tell me what to remember: `/remember Orders are idempotent per cart id`');
+            sink.markdown(text);
+            return { text, local: true };
+        }
+        if (local.command === 'remember') {
+            const saved = await this.memory.save({ title: local.argument, kind: 'note', source: 'vscode' });
+            const text = saved ? t('Remembered: {0}', saved.title) : t('Brokspace could not save that memory.');
+            sink.markdown(text);
+            return { text, local: true };
+        }
+        sink.progress(t('Searching the index…'));
+        const hits = await this.model.brok.search(root, local.argument, 10);
+        const text = hits.length ? t('Found in the index:') : t('No results. Try other words, or check that the index is up to date.');
+        sink.markdown(text);
+        return { text, done: { sources: hits.map(sourceOf) }, local: true };
+    }
+
     protected async send(text: string): Promise<void> {
         if (this.running || !text.trim()) {
             return;
@@ -435,8 +494,15 @@ export class ChatPanel extends BrokspaceWebview {
                 { role: 'assistant' as const, content: turn.answer },
             ]);
         const request = parseRequest(text, history);
-        const turn: ChatTurn = { id: crypto.randomUUID(), question: text.trim(), kind: request.kind, answer: '', sources: [] };
-        if (request.kind === 'ask' && this.attached.length) {
+        const local = parseLocalCommand(text);
+        const turn: ChatTurn = {
+            id: crypto.randomUUID(),
+            question: text.trim(),
+            kind: local?.command ?? request.kind,
+            answer: '',
+            sources: [],
+        };
+        if (request.kind === 'ask' && !local && this.attached.length) {
             // Questions only: a review or a skill works from the repository, so the chips stay for the next question.
             const { included } = withinBudget(this.attached);
             request.history = [...contextTurns(included), ...(request.history ?? [])];
@@ -451,25 +517,21 @@ export class ChatPanel extends BrokspaceWebview {
         const running = new vscode.CancellationTokenSource();
         this.running = running;
         try {
-            const result = await answer(
-                this.model,
-                request,
-                {
-                    progress: (progress) => this.post({ type: 'chat/progress', id: turn.id, text: progress }),
-                    markdown: (chunk) => {
-                        turn.answer += chunk;
-                        this.post({ type: 'chat/chunk', id: turn.id, text: chunk });
-                    },
+            const sink = {
+                progress: (progress: string) => this.post({ type: 'chat/progress', id: turn.id, text: progress }),
+                markdown: (chunk: string) => {
+                    turn.answer += chunk;
+                    this.post({ type: 'chat/chunk', id: turn.id, text: chunk });
                 },
-                running.token,
-            );
+            };
+            const result = local ? await this.runLocal(local, sink) : await answer(this.model, request, sink, running.token);
             turn.answer = result.text;
             turn.sources = result.done?.sources ?? [];
             turn.model = result.done?.model ? [result.done.provider, result.done.model].filter(Boolean).join('/') : undefined;
             turn.local = result.local;
             turn.cancelled = running.token.isCancellationRequested;
             turn.done = true;
-            if (request.kind === 'ask' && !turn.cancelled) {
+            if (request.kind === 'ask' && !local && !turn.cancelled) {
                 const turns: SessionTurn[] = conversation
                     .filter((done) => done.kind === 'ask' && done.done && !done.error && done.answer)
                     .map((done) => ({ question: done.question, answer: done.answer, sources: done.sources.map(cite) }));

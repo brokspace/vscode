@@ -2,6 +2,8 @@
 
 import MarkdownIt from 'markdown-it';
 import * as React from 'react';
+import { matchSlash, type SlashEntry, stepHistory } from '../src/core/composer';
+import type { SkillInfo } from '../src/core/protocol';
 import { cite } from '../src/core/text';
 import type { ChatTurn, ContextChip, ContextSource, SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
@@ -27,6 +29,15 @@ export function ChatApp({
     const [draft, setDraft] = React.useState('');
     const [chips, setChips] = React.useState<{ items: ContextChip[]; limit: number }>({ items: [], limit: 0 });
     const [, setState] = React.useState(host.state);
+    const [editor, setEditor] = React.useState<{ file?: string; selection: boolean; sendWith: 'enter' | 'ctrlEnter' }>({
+        selection: false,
+        sendWith: 'enter',
+    });
+    const [skills, setSkills] = React.useState<SkillInfo[]>([]);
+    const [pick, setPick] = React.useState(0);
+    const [menuClosed, setMenuClosed] = React.useState(false);
+    // Walking back through the prompts of this conversation: `recall` is the position (prompts.length = the draft being written).
+    const [recall, setRecall] = React.useState<{ index: number; saved: string } | undefined>();
     const end = React.useRef<HTMLDivElement>(null);
     const input = React.useRef<HTMLTextAreaElement>(null);
 
@@ -36,6 +47,9 @@ export function ChatApp({
                 switch (msg.type) {
                     case 'state':
                         setState(host.state);
+                        break;
+                    case 'editor/state':
+                        setEditor({ file: msg.file, selection: msg.selection, sendWith: msg.sendWith });
                         break;
                     case 'context/state':
                         setChips({ items: msg.items, limit: msg.limit });
@@ -75,6 +89,104 @@ export function ChatApp({
         }
         host.post({ type: 'chat/send', text });
         setDraft('');
+        setRecall(undefined);
+    };
+    /** A suggestion fills the composer; it never sends. */
+    const suggest = (text: string, attach?: ContextSource) => {
+        if (attach) {
+            host.post({ type: 'context/add', source: attach });
+        }
+        setDraft(text);
+        input.current?.focus();
+    };
+
+    const prompts = turns.map((turn) => turn.question);
+    const commands: (SlashEntry & { label: string; description: string })[] = [
+        { insert: '/review', args: false, label: '/review', description: t('Review your uncommitted changes') },
+        { insert: '/review staged', args: false, label: '/review staged', description: t('Review only the staged changes') },
+        { insert: '/review base ', args: true, label: '/review base <ref>', description: t('Review the changes since a branch or commit') },
+        { insert: '/search ', args: true, label: '/search <words>', description: t('Find code in the index, without the LLM') },
+        { insert: '/remember ', args: true, label: '/remember <text>', description: t('Save a note to Brokspace memory') },
+        { insert: '/skill ', args: true, label: '/skill <name> <task>', description: t('Run a skill on your LLM') },
+    ];
+    const skillEntries = draft.toLowerCase().startsWith('/skill ')
+        ? skills
+              .filter((skill) => skill.user_invoked)
+              .map((skill) => ({
+                  insert: `/skill ${skill.name} `,
+                  args: true,
+                  label: `/skill ${skill.name}`,
+                  description: skill.description,
+              }))
+        : [];
+    const menu = menuClosed ? [] : matchSlash(skillEntries.length ? skillEntries : commands, draft);
+    const active = Math.min(pick, Math.max(0, menu.length - 1));
+    // biome-ignore lint/correctness/useExhaustiveDependencies: fetch the skills the first time a /skill command is typed.
+    React.useEffect(() => {
+        if (draft.toLowerCase().startsWith('/skill ') && !skills.length && ready) {
+            host.rpc<SkillInfo[]>('skills').then(setSkills, () => undefined);
+        }
+    }, [draft, ready]);
+    const choose = (entry: SlashEntry) => {
+        setDraft(entry.insert);
+        setPick(0);
+        input.current?.focus();
+    };
+    const keyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.nativeEvent.isComposing) {
+            return;
+        }
+        if (menu.length) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                setPick((active + (e.key === 'ArrowDown' ? 1 : menu.length - 1)) % menu.length);
+                return;
+            }
+            if (e.key === 'Tab' || (e.key === 'Enter' && !e.shiftKey)) {
+                e.preventDefault();
+                choose(menu[active] as SlashEntry);
+                return;
+            }
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                setMenuClosed(true);
+                return;
+            }
+        }
+        if (e.key === 'Escape' && running) {
+            e.preventDefault();
+            host.post({ type: 'chat/cancel' });
+            return;
+        }
+        // Up and Down walk the earlier prompts only from an empty box or one already being recalled, so editing text is untouched.
+        const field = e.currentTarget;
+        if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && !e.shiftKey && !e.altKey && !e.ctrlKey && !e.metaKey && prompts.length) {
+            const walking = recall !== undefined;
+            const atEdge =
+                e.key === 'ArrowUp' ? field.selectionStart === 0 && field.selectionEnd === 0 : field.selectionStart === field.value.length;
+            if ((walking || !draft) && atEdge) {
+                e.preventDefault();
+                const from = recall?.index ?? prompts.length;
+                const index = stepHistory(prompts, from, e.key === 'ArrowUp' ? 'up' : 'down');
+                const saved = recall?.saved ?? draft;
+                setRecall(index === prompts.length ? undefined : { index, saved });
+                setDraft(index === prompts.length ? saved : (prompts[index] as string));
+                return;
+            }
+        }
+        if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+            const modified = e.ctrlKey || e.metaKey;
+            if (editor.sendWith === 'ctrlEnter' ? modified : !e.shiftKey && !modified) {
+                e.preventDefault();
+                send(draft);
+            } else if (modified && editor.sendWith === 'enter') {
+                // Ctrl+Enter adds a line, the way Shift+Enter does.
+                e.preventDefault();
+                const at = field.selectionStart;
+                setDraft(`${draft.slice(0, at)}\n${draft.slice(field.selectionEnd)}`);
+                requestAnimationFrame(() => field.setSelectionRange(at + 1, at + 1));
+            }
+        }
     };
     const openSettings = (section: SettingsSection) =>
         onOpenSettings ? onOpenSettings(section) : host.command('brokspace.settings', section);
@@ -128,11 +240,29 @@ export function ChatApp({
                                 t('Where is authentication handled?'),
                                 t('What changed recently and why?'),
                             ].map((suggestion) => (
-                                <button key={suggestion} type="button" className="bk-suggestion" onClick={() => send(suggestion)}>
+                                <button key={suggestion} type="button" className="bk-suggestion" onClick={() => suggest(suggestion)}>
                                     {suggestion}
                                 </button>
                             ))}
-                            <button type="button" className="bk-suggestion" onClick={() => send('/review')}>
+                            {editor.selection && (
+                                <button
+                                    type="button"
+                                    className="bk-suggestion"
+                                    onClick={() => suggest(t('Explain the attached code'), 'selection')}
+                                >
+                                    <span className={codicon('list-selection')} /> {t('Explain the selected code')}
+                                </button>
+                            )}
+                            {editor.file && (
+                                <button
+                                    type="button"
+                                    className="bk-suggestion"
+                                    onClick={() => suggest(t('What does the attached file do?'), 'file')}
+                                >
+                                    <span className={codicon('file-code')} /> {t('What does {0} do?', editor.file)}
+                                </button>
+                            )}
+                            <button type="button" className="bk-suggestion" onClick={() => suggest('/review')}>
                                 <span className={codicon('checklist')} /> {t('Review my changes')}
                             </button>
                         </div>
@@ -174,6 +304,28 @@ export function ChatApp({
                 )}
             </div>
 
+            {menu.length > 0 && (
+                <div id="bk-slash-menu" className="bk-slash" role="listbox" aria-label={t('Commands')}>
+                    {menu.map((entry, i) => (
+                        <div
+                            key={entry.insert}
+                            id={`bk-slash-${i}`}
+                            role="option"
+                            tabIndex={-1}
+                            aria-selected={i === active}
+                            className={`bk-slash-item ${i === active ? 'bk-slash-on' : ''}`}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                choose(entry);
+                            }}
+                        >
+                            <code>{entry.label}</code>
+                            <span>{entry.description}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+
             <form
                 className="bk-chat-input"
                 onSubmit={(e) => {
@@ -186,15 +338,20 @@ export function ChatApp({
                     rows={Math.min(8, Math.max(2, draft.split('\n').length))}
                     value={draft}
                     disabled={!ready}
-                    placeholder={t('Ask a question, or /review, /review staged, /skill <name> <task>')}
+                    placeholder={t('Ask a question, or type / for commands')}
                     aria-label={t('Ask Brokspace')}
-                    onChange={(e) => setDraft(e.currentTarget.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                            e.preventDefault();
-                            send(draft);
-                        }
+                    onChange={(e) => {
+                        setDraft(e.currentTarget.value);
+                        setPick(0);
+                        setMenuClosed(false);
+                        setRecall(undefined);
                     }}
+                    onKeyDown={keyDown}
+                    role="combobox"
+                    aria-expanded={menu.length > 0}
+                    aria-controls="bk-slash-menu"
+                    aria-autocomplete="list"
+                    aria-activedescendant={menu.length ? `bk-slash-${active}` : undefined}
                 />
                 {running ? (
                     <button
