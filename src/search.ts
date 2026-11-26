@@ -2,6 +2,7 @@
 
 import * as vscode from 'vscode';
 import { message } from './core/brok';
+import { Latest } from './core/latest';
 import { resolveHitPath } from './core/paths';
 import type { SearchHit } from './core/protocol';
 import { firstLine } from './core/text';
@@ -32,17 +33,20 @@ export async function searchWorkspace(model: BrokspaceModel, initial?: string): 
     pick.value = initial ?? editorSelection() ?? '';
     let timer: NodeJS.Timeout | undefined;
     let generation = 0;
+    // A newer query ends the brok process of the one it replaces.
+    const searches = new Latest();
 
     const run = async (query: string) => {
         const current = ++generation;
         if (!query.trim()) {
+            searches.cancel();
             pick.items = [];
             pick.busy = false;
             return;
         }
         pick.busy = true;
         try {
-            const hits = await model.brok.search(root, query, LIMIT);
+            const hits = await model.brok.search(root, query, LIMIT, searches.next());
             if (current !== generation) {
                 return; // a newer query is running
             }
@@ -78,6 +82,8 @@ export async function searchWorkspace(model: BrokspaceModel, initial?: string): 
     });
     pick.onDidHide(() => {
         clearTimeout(timer);
+        generation++; // nothing may touch the disposed list
+        searches.cancel();
         pick.dispose();
     });
     pick.show();
