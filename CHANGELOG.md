@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-11-26
+
 ### Fixed
 
 - **Set up this folder** asks before writing files for coding agents into your project, listing them, and you can set up without them. Before, they were written while the checklist said nothing in your code changed ([brok#198](https://github.com/brokspace/brok/issues/198)).
