@@ -96,8 +96,10 @@ export class Brok {
         return this.json<BrokStatus>(root, ['status', '--json']);
     }
 
-    async search(root: string, query: string, limit: number): Promise<SearchHit[]> {
-        const result = await this.json<{ hits: SearchHit[] }>(root, ['search', '--json', '-n', String(limit), '--', query]);
+    /** Aborting `signal` ends the brok process and rejects with {@link CancelledError}. */
+    async search(root: string, query: string, limit: number, signal?: AbortSignal): Promise<SearchHit[]> {
+        const args = ['search', '--json', '-n', String(limit), '--', query];
+        const result = await this.json<{ hits: SearchHit[] }>(root, args, signal);
         return result.hits ?? [];
     }
 
@@ -305,20 +307,22 @@ export class Brok {
         });
     }
 
-    protected async json<T>(root: string, args: string[]): Promise<T> {
-        const { stdout } = await this.exec(root, args);
+    protected async json<T>(root: string, args: string[], signal?: AbortSignal): Promise<T> {
+        const { stdout } = await this.exec(root, args, undefined, signal);
         return JSON.parse(stdout) as T;
     }
 
     /** Runs brok; `input` goes to its stdin. */
-    protected exec(cwd: string, args: string[], input?: string): Promise<{ stdout: string; stderr: string }> {
+    protected exec(cwd: string, args: string[], input?: string, signal?: AbortSignal): Promise<{ stdout: string; stderr: string }> {
         return new Promise((resolve, reject) => {
             const child = execFile(
                 this.executable,
                 args,
-                { cwd, env: env(), maxBuffer: MAX_BUFFER, windowsHide: true },
+                { cwd, env: env(), maxBuffer: MAX_BUFFER, windowsHide: true, signal },
                 (error, stdout, stderr) => {
-                    if (error) {
+                    if (signal?.aborted) {
+                        reject(new CancelledError());
+                    } else if (error) {
                         reject(new Error(cleanError(stderr) || error.message));
                     } else {
                         resolve({ stdout, stderr });
