@@ -119,7 +119,7 @@ export function Onboarding({
                         ) : (
                             <p>
                                 {t(
-                                    'Creates .brokspace/brok.yml and indexes the folder, with progress you can cancel. Nothing in your code is changed, and an existing setup is kept.',
+                                    'Creates .brokspace/ and indexes the folder, with progress you can cancel. Before writing anything else into your project, such as files for coding agents, it asks. An existing setup is kept.',
                                 )}
                             </p>
                         )}

@@ -7,6 +7,7 @@ import { registerChatParticipant } from './chat';
 import { message } from './core/brok';
 import { assetName, installBrok, lacksAgent } from './core/installer';
 import { type BugInput, type Memory, type MemoryKind, type MemoryScope, MINIMUM_BROK_VERSION } from './core/protocol';
+import { AGENT_PLAN_ARGS, parseAgentPlan, setupArgs } from './core/setup';
 import { lastLines } from './core/text';
 import { MemoryStore } from './memory';
 import { BrokspaceModel, type BrokspaceState } from './model';
@@ -308,7 +309,39 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     );
 
     // ---------------------------------------------------------------- service, setup, shards
-    register('brokspace.setup', () => runInOutput(t('Setting up Brokspace'), ['init', '--yes'], t('Brokspace is ready.'), true));
+    register('brokspace.setup', async () => {
+        let withAgentFiles = false;
+        const root = model.root;
+        if (root) {
+            const plan = await model.brok.run(root, AGENT_PLAN_ARGS);
+            const files = parseAgentPlan(plan.code, plan.stdout);
+            if (!files || files.length > 0) {
+                const add = t('Add Agent Files');
+                const without = t('Set Up Without Them');
+                const choice = await vscode.window.showInformationMessage(
+                    t('Also add files so your coding agents can use Brokspace?'),
+                    {
+                        modal: true,
+                        detail: files
+                            ? t(
+                                  'Setting up indexes this folder in .brokspace/. These would also be written into your project: {0}',
+                                  files.join(', '),
+                              )
+                            : t(
+                                  'Setting up indexes this folder in .brokspace/. Agent files (skills and MCP settings) would also be written into your project; this brok cannot list them, update it to see the list.',
+                              ),
+                    },
+                    add,
+                    without,
+                );
+                if (!choice) {
+                    return false;
+                }
+                withAgentFiles = choice === add;
+            }
+        }
+        return runInOutput(t('Setting up Brokspace'), setupArgs(withAgentFiles), t('Brokspace is ready.'), true);
+    });
     register('brokspace.start', () => runQuiet(['start'], t('Brokspace started.')));
     register('brokspace.stop', () => runQuiet(['stop'], t('Brokspace stopped.')));
     register('brokspace.restart', () => runQuiet(['restart'], t('Brokspace restarted.')));
