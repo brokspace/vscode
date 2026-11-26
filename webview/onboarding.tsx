@@ -87,10 +87,10 @@ export function Onboarding({
                         <p>
                             {state.kind === 'outdated'
                                 ? t(
-                                      'The brok found here is too old for this extension. Installing downloads a compatible one, only after you confirm.',
+                                      'The brok found here is too old for this extension. Installing downloads a compatible brok and brok-agent, only after you confirm.',
                                   )
                                 : t(
-                                      'Brokspace runs through the brok command line tool. Installing downloads it from GitHub after you confirm, checks it and keeps it in the extension folder.',
+                                      'Brokspace runs through brok and brok-agent. Installing downloads both from GitHub after you confirm, checks them and keeps them in the extension folder.',
                                   )}
                         </p>
                         <p className="bk-onboarding-hint">
@@ -119,7 +119,7 @@ export function Onboarding({
                         ) : (
                             <p>
                                 {t(
-                                    'Creates .brokspace/brok.yml and indexes the folder, with progress you can cancel. Nothing in your code is changed, and an existing setup is kept.',
+                                    'Creates .brokspace/ and indexes the folder, with progress you can cancel. Before writing anything else into your project, such as files for coding agents, it asks. An existing setup is kept.',
                                 )}
                             </p>
                         )}

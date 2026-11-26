@@ -74,9 +74,10 @@ _Rendered from the extension's own UI with sample data (`python3 scripts/screens
 
 If brok is not installed, the extension asks before doing anything. Say **Download** and it:
 
-- downloads the `brok` executable for your platform from the
-  [brokspace/brok GitHub releases](https://github.com/brokspace/brok/releases) (about 150 to 220 MB; no other host);
-- checks it against the SHA-256 published next to it, and installs nothing if it does not match;
+- downloads the `brok` and `brok-agent` executables for your platform from the GitHub releases of
+  [brokspace/brok](https://github.com/brokspace/brok/releases) and
+  [brokspace/brok-agent](https://github.com/brokspace/brok-agent/releases) (about 160 to 235 MB);
+- checks each against the SHA-256 published next to it, and installs nothing if either does not match;
 - keeps it in the extension's own storage folder: no administrator rights, no change to your `PATH`.
 
 It never replaces a brok you already have: `brokspace.brokPath`, `BROK_PATH`, the usual install folders and

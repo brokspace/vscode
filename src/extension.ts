@@ -5,8 +5,9 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { registerChatParticipant } from './chat';
 import { message } from './core/brok';
-import { assetName, installBrok, RELEASES } from './core/installer';
+import { assetName, installBrok, lacksAgent } from './core/installer';
 import { type BugInput, type Memory, type MemoryKind, type MemoryScope, MINIMUM_BROK_VERSION } from './core/protocol';
+import { AGENT_PLAN_ARGS, parseAgentPlan, setupArgs } from './core/setup';
 import { lastLines } from './core/text';
 import { MemoryStore } from './memory';
 import { BrokspaceModel, type BrokspaceState } from './model';
@@ -308,7 +309,39 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     );
 
     // ---------------------------------------------------------------- service, setup, shards
-    register('brokspace.setup', () => runInOutput(t('Setting up Brokspace'), ['init', '--yes'], t('Brokspace is ready.'), true));
+    register('brokspace.setup', async () => {
+        let withAgentFiles = false;
+        const root = model.root;
+        if (root) {
+            const plan = await model.brok.run(root, AGENT_PLAN_ARGS);
+            const files = parseAgentPlan(plan.code, plan.stdout);
+            if (!files || files.length > 0) {
+                const add = t('Add Agent Files');
+                const without = t('Set Up Without Them');
+                const choice = await vscode.window.showInformationMessage(
+                    t('Also add files so your coding agents can use Brokspace?'),
+                    {
+                        modal: true,
+                        detail: files
+                            ? t(
+                                  'Setting up indexes this folder in .brokspace/. These would also be written into your project: {0}',
+                                  files.join(', '),
+                              )
+                            : t(
+                                  'Setting up indexes this folder in .brokspace/. Agent files (skills and MCP settings) would also be written into your project; this brok cannot list them, update it to see the list.',
+                              ),
+                    },
+                    add,
+                    without,
+                );
+                if (!choice) {
+                    return false;
+                }
+                withAgentFiles = choice === add;
+            }
+        }
+        return runInOutput(t('Setting up Brokspace'), setupArgs(withAgentFiles), t('Brokspace is ready.'), true);
+    });
     register('brokspace.start', () => runQuiet(['start'], t('Brokspace started.')));
     register('brokspace.stop', () => runQuiet(['stop'], t('Brokspace stopped.')));
     register('brokspace.restart', () => runQuiet(['restart'], t('Brokspace restarted.')));
@@ -397,6 +430,19 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     register('brokspace.refresh', () => model.refresh());
     register('brokspace.installHelp', () => vscode.env.openExternal(vscode.Uri.parse(INSTALL_URL)));
 
+    // A workspace set up before the agent was there gains it by being set up again.
+    const offerAgentSetup = (done: string) => {
+        const shards = model.ready?.status.shards;
+        const missing = shards && !shards.some((shard) => shard.name === 'brok-agent');
+        const setUp = t('Set Up Workspace');
+        void vscode.window
+            .showInformationMessage(
+                missing ? `${done} ${t('Set up this folder again to add the agent to it.')}` : done,
+                ...(missing ? [setUp] : []),
+            )
+            .then((choice) => choice === setUp && vscode.commands.executeCommand('brokspace.setup'));
+    };
+
     // Download brok on first use, only with the user's consent and never over an existing install.
     let installing: Promise<boolean> | undefined;
     const installBrokCommand = (): Promise<boolean> => {
@@ -411,8 +457,8 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
             const confirm = t('Download');
             const answer = await vscode.window.showInformationMessage(
                 t(
-                    'Brokspace needs the brok command line tool. Download it from {0} (about 150 to 220 MB)? It is checked against its published SHA-256, kept in the extension storage folder and needs no administrator rights.',
-                    RELEASES,
+                    'Brokspace needs brok and brok-agent, which answers questions. Download both from {0} (about 160 to 235 MB)? Each is checked against its published SHA-256, kept in the extension storage folder and needs no administrator rights.',
+                    'https://github.com/brokspace',
                 ),
                 { modal: true },
                 confirm,
@@ -427,22 +473,29 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
                         const abort = new AbortController();
                         token.onCancellationRequested(() => abort.abort());
                         let last = 0;
+                        let downloading = '';
                         return installBrok({
                             storageDir: context.globalStorageUri.fsPath,
                             signal: abort.signal,
-                            onProgress: (received, total) => {
+                            onProgress: (received, total, program) => {
                                 if (!total) {
                                     return;
                                 }
                                 const percent = Math.floor((received / total) * 100);
-                                progress.report({ increment: percent - last, message: `${percent}%` });
+                                if (program !== downloading) {
+                                    // The bar starts over for each of the two files.
+                                    progress.report({ increment: -last, message: program });
+                                    downloading = program;
+                                    last = 0;
+                                }
+                                progress.report({ increment: percent - last, message: `${program} ${percent}%` });
                                 last = percent;
                             },
                         });
                     },
                 );
-                void vscode.window.showInformationMessage(t('brok {0} installed.', installed.tag));
                 await model.reloadBrok();
+                offerAgentSetup(t('brok {0} and brok-agent {1} installed.', installed.tag, installed.agent.tag));
                 return true;
             } catch (error) {
                 if (!(error instanceof Error && error.name === 'AbortError')) {
@@ -458,6 +511,25 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
     register('brokspace.installBrok', installBrokCommand);
 
     void model.refresh().then(async (state) => {
+        // A download by an earlier version brought brok alone.
+        const storage = context.globalStorageUri.fsPath;
+        if (
+            state.kind !== 'no-brok' &&
+            state.kind !== 'loading' &&
+            state.kind !== 'no-folder' &&
+            lacksAgent(storage) &&
+            model.brok.executable.startsWith(storage)
+        ) {
+            const add = t('Download brok-agent');
+            const choice = await vscode.window.showWarningMessage(
+                t('The brok that Brokspace downloaded has no agent, so questions cannot be answered.'),
+                add,
+            );
+            if (choice === add) {
+                await installBrokCommand();
+            }
+            return;
+        }
         if (state.kind !== 'no-brok' || context.globalState.get<boolean>('brokspace.skipInstallPrompt')) {
             return;
         }
