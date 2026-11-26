@@ -88,7 +88,6 @@
   "Copy": "Copiar",
   "Could not install brok: {0}": "Não foi possível instalar o brok: {0}",
   "Could not read the models": "Não foi possível ler os modelos",
-  "Creates .brokspace/brok.yml and indexes the folder, with progress you can cancel. Nothing in your code is changed, and an existing setup is kept.": "Cria .brokspace/brok.yml e indexa a pasta, com um progresso que você pode cancelar. Nada no seu código é alterado, e uma configuração existente é mantida.",
   "Decision": "Decisão",
   "Decisions, facts and notes are found with your code by questions, searches and coding agents.": "Decisões, fatos e notas são encontrados junto com o seu código por perguntas, buscas e agentes de código.",
   "Default model": "Modelo padrão",
@@ -449,5 +448,11 @@
   "Download brok-agent": "Baixar o brok-agent",
   "The brok that Brokspace downloaded has no agent, so questions cannot be answered.": "O brok que o Brokspace baixou está sem o agente, então as perguntas não podem ser respondidas.",
   "The brok found here is too old for this extension. Installing downloads a compatible brok and brok-agent, only after you confirm.": "O brok encontrado aqui é antigo demais para esta extensão. Instalar baixa um brok compatível e o brok-agent, somente depois da sua confirmação.",
-  "Brokspace runs through brok and brok-agent. Installing downloads both from GitHub after you confirm, checks them and keeps them in the extension folder.": "O Brokspace funciona com o brok e o brok-agent. Instalar baixa os dois do GitHub depois da sua confirmação, confere os arquivos e os mantém na pasta da extensão."
+  "Brokspace runs through brok and brok-agent. Installing downloads both from GitHub after you confirm, checks them and keeps them in the extension folder.": "O Brokspace funciona com o brok e o brok-agent. Instalar baixa os dois do GitHub depois da sua confirmação, confere os arquivos e os mantém na pasta da extensão.",
+  "Add Agent Files": "Adicionar arquivos dos agentes",
+  "Set Up Without Them": "Configurar sem eles",
+  "Also add files so your coding agents can use Brokspace?": "Adicionar também arquivos para que seus agentes de código usem o Brokspace?",
+  "Setting up indexes this folder in .brokspace/. Agent files (skills and MCP settings) would also be written into your project; this brok cannot list them, update it to see the list.": "A configuração indexa esta pasta em .brokspace/. Arquivos dos agentes (skills e configurações MCP) também seriam gravados no seu projeto; este brok não consegue listá-los, atualize-o para ver a lista.",
+  "Creates .brokspace/ and indexes the folder, with progress you can cancel. Before writing anything else into your project, such as files for coding agents, it asks. An existing setup is kept.": "Cria .brokspace/ e indexa a pasta, com progresso que você pode cancelar. Antes de gravar qualquer outra coisa no seu projeto, como arquivos para agentes de código, ele pergunta. Uma configuração existente é mantida.",
+  "Setting up indexes this folder in .brokspace/. These would also be written into your project: {0}": "A configuração indexa esta pasta em .brokspace/. Estes também seriam gravados no seu projeto: {0}"
 }
