@@ -6,6 +6,8 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-26
+
 ### Fixed
 
 - Workspace search stops the `brok` process of a query you have already changed, and of the one still running when you close the list, instead of letting them run to the end ([#70](https://github.com/brokspace/vscode/issues/70)).
