@@ -2,7 +2,7 @@
   "name": "brokspace",
   "displayName": "Brokspace: Local AI Code Search & Memory",
   "description": "%description%",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "publisher": "brokspace",
   "license": "MIT OR Apache-2.0",
   "icon": "media/icon.png",
