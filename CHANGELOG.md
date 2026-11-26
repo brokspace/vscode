@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Download and Install brok** now brings `brok-agent` too. Before, a downloaded brok had no agent, so there were no answers, reviews, commit messages or live index updates. If you downloaded brok earlier, the extension offers to add the agent ([#19](https://github.com/brokspace/vscode/issues/19)).
+
 ## [0.5.1] - 2026-11-26
 
 ### Fixed

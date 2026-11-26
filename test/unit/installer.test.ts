@@ -14,18 +14,32 @@ import {
     installBrok,
     isCompatibleTag,
     isReleaseTag,
+    lacksAgent,
     managedExecutable,
     parseChecksum,
 } from '../../src/core/installer';
 
 const BODY = Buffer.from('#!/bin/sh\necho brok 0.5.0\n');
 const SHA = createHash('sha256').update(BODY).digest('hex');
+const AGENT = Buffer.from('#!/bin/sh\necho brok-agent 0.5.1\n');
+const AGENT_SHA = createHash('sha256').update(AGENT).digest('hex');
 
 /** A fake GitHub: serves the asset and its sidecar, records every URL asked for. */
-function fakeGithub(options: { sha?: string; sidecar?: boolean; asset?: boolean } = {}): { fetchFn: Fetch; urls: string[] } {
+function fakeGithub(options: { sha?: string; sidecar?: boolean; asset?: boolean; agentSha?: string } = {}): {
+    fetchFn: Fetch;
+    urls: string[];
+} {
     const urls: string[] = [];
     const fetchFn: Fetch = async (url) => {
         urls.push(url);
+        if (url.includes('brok-agent')) {
+            if (url.endsWith('/releases/latest')) {
+                return new Response(JSON.stringify({ tag_name: 'v0.5.1' }));
+            }
+            return url.endsWith('.sha256')
+                ? new Response(`${options.agentSha ?? AGENT_SHA}  brok-agent-linux-x86_64\n`)
+                : new Response(AGENT, { headers: { 'content-length': String(AGENT.length) } });
+        }
         if (url.endsWith('.sha256')) {
             return options.sidecar === false
                 ? new Response('not found', { status: 404 })
@@ -107,13 +121,13 @@ describe('installBrok', () => {
 
     it('downloads, verifies and installs an executable', async () => {
         const { fetchFn, urls } = fakeGithub();
-        const seen: number[] = [];
+        const seen: string[] = [];
         const result = await installBrok({
             storageDir: dir,
             platform: 'linux',
             arch: 'x64',
             fetchFn,
-            onProgress: (received) => seen.push(received),
+            onProgress: (received, _total, program) => seen.push(`${program} ${received}`),
         });
         assert.equal(result.tag, 'v0.5.0');
         assert.equal(result.sha256, SHA);
@@ -122,11 +136,23 @@ describe('installBrok', () => {
         if (process.platform !== 'win32') {
             assert.ok(fs.statSync(result.path).mode & 0o100, 'executable');
         }
-        assert.equal(seen.at(-1), BODY.length);
+        assert.equal(seen.at(-1), `brok-agent ${AGENT.length}`);
+        assert.equal(result.agent.tag, 'v0.5.1');
+        assert.equal(result.agent.path, managedExecutable(dir, 'linux', 'brok-agent'));
+        assert.deepEqual(fs.readFileSync(result.agent.path), AGENT);
+        if (process.platform !== 'win32') {
+            assert.ok(fs.statSync(result.agent.path).mode & 0o100, 'executable');
+        }
+        const allowed = [
+            /^https:\/\/api\.github\.com\/repos\/brokspace\/brok(-agent)?\//,
+            /^https:\/\/github\.com\/brokspace\/brok(-agent)?\/releases\//,
+        ];
         assert.ok(
-            urls.every((u) => u.startsWith('https://api.github.com/') || u.startsWith('https://github.com/brokspace/brok/releases/')),
+            urls.every((u) => allowed.some((a) => a.test(u))),
+            urls.join('\n'),
         );
-        assert.deepEqual(fs.readdirSync(path.dirname(result.path)), ['brok'], 'no partial file left');
+        assert.deepEqual(fs.readdirSync(path.dirname(result.path)).sort(), ['brok', 'brok-agent'], 'no partial file left');
+        assert.equal(lacksAgent(dir, 'linux'), false);
     });
 
     it('refuses a binary that does not match its checksum and keeps the previous install', async () => {
@@ -137,7 +163,22 @@ describe('installBrok', () => {
             /does not match its published SHA-256/,
         );
         assert.deepEqual(fs.readFileSync(first.path), BODY);
-        assert.deepEqual(fs.readdirSync(path.dirname(first.path)), ['brok']);
+        assert.deepEqual(fs.readdirSync(path.dirname(first.path)).sort(), ['brok', 'brok-agent']);
+    });
+
+    it('installs neither when the agent fails its check', async () => {
+        await assert.rejects(
+            installBrok({ storageDir: dir, platform: 'linux', arch: 'x64', fetchFn: fakeGithub({ agentSha: 'b'.repeat(64) }).fetchFn }),
+            /downloaded brok-agent does not match/,
+        );
+        assert.deepEqual(fs.readdirSync(path.join(dir, 'bin')), []);
+    });
+
+    it('notices a download from before the agent was included', () => {
+        assert.equal(lacksAgent(dir, 'linux'), false, 'nothing downloaded');
+        fs.mkdirSync(path.join(dir, 'bin'));
+        fs.writeFileSync(managedExecutable(dir, 'linux'), BODY);
+        assert.equal(lacksAgent(dir, 'linux'), true);
     });
 
     it('refuses to install without a checksum', async () => {
