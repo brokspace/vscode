@@ -6,12 +6,14 @@ import * as vscode from 'vscode';
 import { registerChatParticipant } from './chat';
 import { message } from './core/brok';
 import { assetName, installBrok, lacksAgent } from './core/installer';
-import { type BugInput, type Memory, type MemoryKind, type MemoryScope, MINIMUM_BROK_VERSION } from './core/protocol';
+import { type BugInput, type Memory, type MemoryKind, type MemoryScope, MINIMUM_BROK_VERSION, type Readiness } from './core/protocol';
+import { embeddedPercent, type NextStep, nextStep, searchBroken } from './core/readiness';
 import { AGENT_PLAN_ARGS, parseAgentPlan, setupArgs } from './core/setup';
 import { lastLines } from './core/text';
 import { MemoryStore } from './memory';
 import { BrokspaceModel, type BrokspaceState } from './model';
 import { searchWorkspace } from './search';
+import { readinessLines, stepLabel } from './status';
 import { type Item, kindIcon, LinksTree, MemoryTree, OverviewTree, ShardsTree, SkillsTree } from './views';
 import type { SettingsSection } from './webview-protocol';
 import { ChatPanel, SettingsPanel } from './webviews';
@@ -428,6 +430,33 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
         await model.refresh();
     });
     register('brokspace.refresh', () => model.refresh());
+    register('brokspace.nextStep', async () => {
+        const step = nextStep(model.ready?.status.readiness);
+        if (!step) {
+            void vscode.window.showInformationMessage(t('Brokspace has no step to suggest.'));
+            return;
+        }
+        const run: Record<NextStep, () => unknown> = {
+            rebuildIndex: () => vscode.commands.executeCommand('brokspace.reindex'),
+            downloadSearchModel: () => runInOutput(stepLabel(step), ['model', 'download'], undefined, true),
+            index: () => runInOutput(stepLabel(step), ['index'], undefined, true),
+            restart: () => vscode.commands.executeCommand('brokspace.restart'),
+            start: () => vscode.commands.executeCommand('brokspace.start'),
+            installAgent: async () => {
+                const install = t('Install');
+                const source = 'https://github.com/brokspace/brok-agent';
+                const question = t('Install {0}? A shard runs on your machine with the permissions its shard.json declares.', source);
+                if ((await vscode.window.showWarningMessage(question, { modal: true }, install)) === install) {
+                    await runInOutput(stepLabel(step), ['shard', 'install', '--yes', source]);
+                }
+            },
+            setup: () => vscode.commands.executeCommand('brokspace.setup'),
+            upgrade: () => vscode.window.showInformationMessage(t('Run "brok upgrade" in a terminal, then refresh.')),
+            logs: () => vscode.commands.executeCommand('brokspace.showLogs'),
+            chooseModel: () => settings.show('model'),
+        };
+        await run[step]();
+    });
     register('brokspace.installHelp', () => vscode.env.openExternal(vscode.Uri.parse(INSTALL_URL)));
 
     // A workspace set up before the agent was there gains it by being set up again.
@@ -598,25 +627,50 @@ async function remember(memory: MemoryStore, body?: string): Promise<void> {
     }
 }
 
-/** Service state and model at a glance; opens the Brokspace view. */
+/** What works and what to do next. Only the fixed link runs a command; brok's words are plain text. */
+function readinessTooltip(summary: string, readiness: Readiness): vscode.MarkdownString {
+    const tooltip = new vscode.MarkdownString();
+    tooltip.appendText(summary);
+    for (const line of readinessLines(readiness)) {
+        tooltip.appendMarkdown('\n\n');
+        tooltip.appendText(line);
+    }
+    const step = nextStep(readiness);
+    if (step) {
+        tooltip.appendMarkdown(`\n\n---\n\n[${stepLabel(step)}](command:brokspace.nextStep)`);
+        tooltip.isTrusted = { enabledCommands: ['brokspace.nextStep'] };
+    }
+    return tooltip;
+}
+
+/** Service state, readiness and model at a glance; opens the Brokspace view. */
 function statusBar(model: BrokspaceModel): vscode.Disposable {
     const item = vscode.window.createStatusBarItem('brokspace.status', vscode.StatusBarAlignment.Left, 100);
     item.name = 'Brokspace';
-    item.command = 'workbench.view.extension.brokspace';
     const update = (state: BrokspaceState) => {
         if (!vscode.workspace.getConfiguration('brokspace').get<boolean>('statusBar.enabled', true)) {
             item.hide();
             return;
         }
         item.backgroundColor = undefined;
+        item.command = 'workbench.view.extension.brokspace';
         switch (state.kind) {
             case 'ready': {
                 const running = state.status.daemon?.running;
-                const label = running ? t('Running') : t('Stopped');
-                item.text = `$(${running ? 'pulse' : 'circle-slash'}) Brokspace${state.status.llm?.model ? ` · ${state.status.llm.model}` : ''}`;
-                item.tooltip = running
+                const readiness = state.status.readiness;
+                const broken = searchBroken(readiness);
+                const percent = embeddedPercent(readiness);
+                const icon = broken ? 'warning' : running ? 'pulse' : 'circle-slash';
+                const llm = state.status.llm?.model ? ` · ${state.status.llm.model}` : '';
+                const progress = percent === undefined ? '' : ` · ${t('{0}% embedded', percent)}`;
+                item.text = `$(${icon}) Brokspace${llm}${progress}`;
+                if (broken) {
+                    item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
+                }
+                const summary = running
                     ? t('Brokspace is running: the index follows your edits. Click to open.')
-                    : `${label}. ${t('Brokspace is stopped: start it for live indexing. Click to open.')}`;
+                    : t('Brokspace is stopped: start it for live indexing. Click to open.');
+                item.tooltip = readiness ? readinessTooltip(summary, readiness) : summary;
                 break;
             }
             case 'not-initialized':

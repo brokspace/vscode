@@ -35,6 +35,29 @@ test('an existing install and workspace are detected as done', () => {
     }
 });
 
+test('a model brok cannot use is not done', () => {
+    const base = ready('ollama') as Extract<BrokspaceState, { kind: 'ready' }>;
+    const withModel = (state: string): BrokspaceState => ({
+        ...base,
+        status: {
+            ...base.status,
+            readiness: {
+                text_search: { state: 'ready' },
+                meaning_search: { state: 'ready', embedded: 1, chunks: 1 },
+                agent: { state: 'ready' },
+                model: { state },
+            },
+        },
+    });
+    for (const state of ['unreachable', 'not_installed', 'missing_key', 'not_configured']) {
+        assert.equal(status(checklist(withModel(state), emptyProgress()), 'model'), 'todo', state);
+    }
+    // A hosted model is not contacted, and a newer brok may say something else.
+    for (const state of ['ready', 'unchecked', 'something_new']) {
+        assert.equal(status(checklist(withModel(state), emptyProgress()), 'model'), 'done', state);
+    }
+});
+
 test('optional steps never block and can be skipped', () => {
     const progress = { ...emptyProgress(), acknowledged: true, skipped: ['model' as const] };
     const steps = checklist(ready(), progress);

@@ -101,6 +101,8 @@ This is the only network access the extension itself makes; everything else goes
    and starts brok.
 3. Press `Ctrl+Alt+F` to search, or `Ctrl+Shift+Alt+B` to ask.
 
+With brok 0.13 or newer, the status bar tooltip shows what works and suggests the next step.
+
 The chat walks you through this with a checklist (**Brokspace: Get Started** shows it again). A model is optional: without one, search and answers from the index still work.
 
 Something wrong? **Brokspace: Doctor** shows `brok doctor`, and

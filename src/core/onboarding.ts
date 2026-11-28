@@ -34,6 +34,8 @@ export interface Progress {
     reopened: boolean;
 }
 
+const UNUSABLE_MODEL = ['unreachable', 'not_installed', 'missing_key', 'not_configured'];
+
 export const OPTIONAL: readonly StepId[] = ['model', 'memory', 'mcp', 'links'];
 
 export function emptyProgress(): Progress {
@@ -71,7 +73,8 @@ export function checklist(state: BrokspaceState, progress: Progress, mcpEnabled 
         brok: state.kind !== 'loading' && state.kind !== 'no-brok' && state.kind !== 'outdated',
         folder: state.kind !== 'loading' && state.kind !== 'no-folder',
         workspace: ready,
-        model: !!provider && provider !== 'none',
+        // A configured model that brok reports unusable still needs the user (brok 0.13 and newer).
+        model: !!provider && provider !== 'none' && !UNUSABLE_MODEL.includes(status?.readiness?.model.state ?? ''),
         first: progress.firstAnswer,
         memory: memories > 0,
         mcp: ready && mcpEnabled,
