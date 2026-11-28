@@ -8,6 +8,7 @@
  */
 
 import type { BrokspaceState } from '../webview-protocol';
+import type { Readiness } from './protocol';
 
 export type StepId = 'local' | 'brok' | 'folder' | 'workspace' | 'model' | 'first' | 'memory' | 'mcp' | 'links';
 
@@ -35,6 +36,13 @@ export interface Progress {
 }
 
 const UNUSABLE_MODEL = ['unreachable', 'not_installed', 'missing_key', 'not_configured'];
+
+const UNFINISHED_INDEX = ['index_workspace', 'finish_indexing'];
+
+/** Whether brok (0.13 and newer) says indexing still has to be finished. */
+export function indexingUnfinished(readiness: Readiness | undefined): boolean {
+    return UNFINISHED_INDEX.includes(readiness?.next_action?.code ?? '');
+}
 
 export const OPTIONAL: readonly StepId[] = ['model', 'memory', 'mcp', 'links'];
 
@@ -72,7 +80,8 @@ export function checklist(state: BrokspaceState, progress: Progress, mcpEnabled 
         local: progress.acknowledged,
         brok: state.kind !== 'loading' && state.kind !== 'no-brok' && state.kind !== 'outdated',
         folder: state.kind !== 'loading' && state.kind !== 'no-folder',
-        workspace: ready,
+        // Set up and then cancelled: the folder is readable, and indexing still waits to be finished.
+        workspace: ready && !indexingUnfinished(status?.readiness),
         // A configured model that brok reports unusable still needs the user (brok 0.13 and newer).
         model: !!provider && provider !== 'none' && !UNUSABLE_MODEL.includes(status?.readiness?.model.state ?? ''),
         first: progress.firstAnswer,

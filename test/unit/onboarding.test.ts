@@ -58,6 +58,28 @@ test('a model brok cannot use is not done', () => {
     }
 });
 
+test('a setup cancelled while indexing is not done', () => {
+    const base = ready() as Extract<BrokspaceState, { kind: 'ready' }>;
+    const withNext = (code: string): BrokspaceState => ({
+        ...base,
+        status: {
+            ...base.status,
+            readiness: {
+                text_search: { state: 'ready' },
+                meaning_search: { state: 'embedding', embedded: 0, chunks: 8 },
+                agent: { state: 'stopped' },
+                model: { state: 'ready' },
+                next_action: { code },
+            },
+        },
+    });
+    const progress = { ...emptyProgress(), acknowledged: true };
+    for (const code of ['index_workspace', 'finish_indexing']) {
+        assert.equal(status(checklist(withNext(code), progress), 'workspace'), 'current', code);
+    }
+    assert.equal(status(checklist(withNext('start'), progress), 'workspace'), 'done');
+});
+
 test('optional steps never block and can be skipped', () => {
     const progress = { ...emptyProgress(), acknowledged: true, skipped: ['model' as const] };
     const steps = checklist(ready(), progress);

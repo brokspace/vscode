@@ -5,7 +5,7 @@ import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { registerChatParticipant } from './chat';
 import { message } from './core/brok';
-import { assetName, installBrok, lacksAgent } from './core/installer';
+import { assetName, installBrok, lacksAgent, networkCause } from './core/installer';
 import { type BugInput, type Memory, type MemoryKind, type MemoryScope, MINIMUM_BROK_VERSION, type Readiness } from './core/protocol';
 import { embeddedPercent, type NextStep, nextStep, searchBroken } from './core/readiness';
 import { AGENT_PLAN_ARGS, parseAgentPlan, setupArgs } from './core/setup';
@@ -528,7 +528,27 @@ export function activate(context: vscode.ExtensionContext): BrokspaceApi {
                 return true;
             } catch (error) {
                 if (!(error instanceof Error && error.name === 'AbortError')) {
-                    void vscode.window.showErrorMessage(t('Could not install brok: {0}', message(error)));
+                    const cause = networkCause(error);
+                    const retry = t('Try Again');
+                    const guide = t('Install Guide');
+                    void vscode.window
+                        .showErrorMessage(
+                            cause
+                                ? t(
+                                      'brok could not be downloaded because GitHub was not reached ({0}). Check your connection and proxy settings, then try again.',
+                                      cause,
+                                  )
+                                : t('Could not install brok: {0}', message(error)),
+                            retry,
+                            guide,
+                        )
+                        .then((choice) => {
+                            if (choice === retry) {
+                                void vscode.commands.executeCommand('brokspace.installBrok');
+                            } else if (choice === guide) {
+                                void vscode.commands.executeCommand('brokspace.installHelp');
+                            }
+                        });
                 }
                 return false;
             }

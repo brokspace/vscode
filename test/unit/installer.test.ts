@@ -16,6 +16,7 @@ import {
     isReleaseTag,
     lacksAgent,
     managedExecutable,
+    networkCause,
     parseChecksum,
 } from '../../src/core/installer';
 
@@ -235,4 +236,10 @@ describe('resolveBrok with a downloaded copy', () => {
             fs.rmSync(dir, { recursive: true, force: true });
         }
     });
+});
+
+it('a download that cannot reach GitHub says why', () => {
+    assert.equal(networkCause(new TypeError('fetch failed', { cause: new Error('connect ECONNREFUSED') })), 'connect ECONNREFUSED');
+    assert.equal(networkCause(new TypeError('terminated')), 'terminated');
+    assert.equal(networkCause(new Error('no checksum found')), undefined);
 });

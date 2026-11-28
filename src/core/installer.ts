@@ -71,6 +71,16 @@ export function parseChecksum(text: string): string {
     return digest;
 }
 
+/** Why a download failed to reach GitHub; `undefined` for any other failure. */
+export function networkCause(error: unknown): string | undefined {
+    // What `fetch` throws when it cannot connect, and when the connection drops mid-way.
+    if (!(error instanceof Error) || (error.message !== 'fetch failed' && error.message !== 'terminated')) {
+        return undefined;
+    }
+    const cause = (error as { cause?: unknown }).cause;
+    return cause instanceof Error && cause.message ? cause.message : error.message;
+}
+
 /** Whether `tag` looks like a release tag (`v1.2.3`); anything else is refused before it reaches a URL. */
 export function isReleaseTag(tag: string): boolean {
     return /^v\d+\.\d+\.\d+$/.test(tag);

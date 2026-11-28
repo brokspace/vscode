@@ -1,7 +1,8 @@
 // Brokspace for VS Code. SPDX-License-Identifier: MIT OR Apache-2.0
 
 import type * as React from 'react';
-import { checklist, type Progress, type Step, type StepId } from '../src/core/onboarding';
+import { checklist, indexingUnfinished, type Progress, type Step, type StepId } from '../src/core/onboarding';
+import { embeddedPercent } from '../src/core/readiness';
 import type { SettingsSection } from '../src/webview-protocol';
 import { codicon, type Host, t } from './host';
 
@@ -111,7 +112,21 @@ export function Onboarding({
                         <div className="bk-buttons">{button(t('Open a folder'), command('workbench.action.files.openFolder'))}</div>
                     </>
                 );
-            case 'workspace':
+            case 'workspace': {
+                const readiness = state.kind === 'ready' ? state.status.readiness : undefined;
+                if (indexingUnfinished(readiness)) {
+                    const percent = embeddedPercent(readiness);
+                    return (
+                        <>
+                            <p>
+                                {percent === undefined
+                                    ? t('Indexing did not finish.')
+                                    : t('Indexing did not finish. Search by words works; search by meaning covers {0}% so far.', percent)}
+                            </p>
+                            <div className="bk-buttons">{button(t('Finish indexing'), command('brokspace.nextStep'))}</div>
+                        </>
+                    );
+                }
                 return (
                     <>
                         {state.kind === 'error' ? (
@@ -129,6 +144,7 @@ export function Onboarding({
                         </div>
                     </>
                 );
+            }
             case 'model':
                 return (
                     <>
