@@ -667,7 +667,7 @@
 
     .bk-settings-nav {
         flex-direction: row;
-        overflow-x: auto;
+        flex-wrap: wrap;
         padding: var(--bk-space-2, 8px);
         border-right: none;
         border-bottom: 1px solid var(--theia-widget-border, var(--theia-panel-border, transparent));

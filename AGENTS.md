@@ -42,4 +42,4 @@ Never push to `staging` or `main`, force-push a branch someone else pushed to, o
 
 ## Releasing (maintainers)
 
-Bump `version` in `package.json` and move the `CHANGELOG.md` entries under it, merge the release PR, then tag `vX.Y.Z` on `main`. The Release workflow publishes to the Visual Studio Marketplace and Open VSX and attaches the `.vsix` to the GitHub release.
+Before a release, check the README and `docs/` links and screenshots against the extension as it behaves now. Bump `version` in `package.json` and move the `CHANGELOG.md` entries under it, merge the release PR, then tag `vX.Y.Z` on `main`. The Release workflow publishes to the Visual Studio Marketplace and Open VSX and attaches the `.vsix` to the GitHub release.

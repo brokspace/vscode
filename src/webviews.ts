@@ -263,7 +263,7 @@ export class ChatPanel extends BrokspaceWebview {
 
     /** Shows the guided first run again (**Brokspace: Get Started**). */
     getStarted(): void {
-        this.updateProgress({ dismissed: false, skipped: [] });
+        this.updateProgress({ dismissed: false, skipped: [], reopened: true });
     }
 
     /** Starts a new conversation (the command, the composer's button). */
@@ -499,10 +499,10 @@ export class ChatPanel extends BrokspaceWebview {
                 this.updateProgress({ skipped: this.progress.skipped.filter((id) => id !== msg.step), dismissed: false });
                 return;
             case 'onboarding/dismiss':
-                this.updateProgress({ dismissed: true });
+                this.updateProgress({ dismissed: true, reopened: false });
                 return;
             case 'onboarding/reopen':
-                this.updateProgress({ dismissed: false, skipped: [] });
+                this.getStarted();
                 return;
         }
     }

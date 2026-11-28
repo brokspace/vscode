@@ -454,5 +454,8 @@
   "Also add files so your coding agents can use Brokspace?": "Adicionar também arquivos para que seus agentes de código usem o Brokspace?",
   "Setting up indexes this folder in .brokspace/. Agent files (skills and MCP settings) would also be written into your project; this brok cannot list them, update it to see the list.": "A configuração indexa esta pasta em .brokspace/. Arquivos dos agentes (skills e configurações MCP) também seriam gravados no seu projeto; este brok não consegue listá-los, atualize-o para ver a lista.",
   "Creates .brokspace/ and indexes the folder, with progress you can cancel. Before writing anything else into your project, such as files for coding agents, it asks. An existing setup is kept.": "Cria .brokspace/ e indexa a pasta, com progresso que você pode cancelar. Antes de gravar qualquer outra coisa no seu projeto, como arquivos para agentes de código, ele pergunta. Uma configuração existente é mantida.",
-  "Setting up indexes this folder in .brokspace/. These would also be written into your project: {0}": "A configuração indexa esta pasta em .brokspace/. Estes também seriam gravados no seu projeto: {0}"
+  "Setting up indexes this folder in .brokspace/. These would also be written into your project: {0}": "A configuração indexa esta pasta em .brokspace/. Estes também seriam gravados no seu projeto: {0}",
+  "Answer ready, with 1 source": "Resposta pronta, com 1 fonte",
+  "Activity: 1 step": "Atividade: 1 etapa",
+  "1 message": "1 mensagem"
 }

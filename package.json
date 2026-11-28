@@ -80,12 +80,14 @@
         {
           "id": "brokspace.overview",
           "name": "%view.overview%",
-          "icon": "media/mark.svg"
+          "icon": "media/mark.svg",
+          "visibility": "collapsed"
         },
         {
           "id": "brokspace.memory",
           "name": "%view.memory%",
-          "icon": "media/mark.svg"
+          "icon": "media/mark.svg",
+          "visibility": "collapsed"
         },
         {
           "id": "brokspace.links",
