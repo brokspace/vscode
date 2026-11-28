@@ -107,7 +107,8 @@ export function ChatApp({
     }, []);
 
     const running = turns.some((turn) => !turn.done);
-    const guiding = isActive(host.state, guide.progress) && turns.length === 0;
+    // Asked for again, the checklist shows above the conversation too.
+    const guiding = isActive(host.state, guide.progress) && (turns.length === 0 || guide.progress.reopened);
     const ready = host.state.kind === 'ready';
     const send = (text: string) => {
         if (!text.trim() || running) {

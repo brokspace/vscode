@@ -55,6 +55,15 @@ test('the checklist goes away after the first answer or when closed', () => {
     assert.equal(isActive({ kind: 'loading' }, emptyProgress()), false);
 });
 
+test('asked for again, the checklist shows until it is closed', () => {
+    const finished = { ...emptyProgress(), acknowledged: true, firstAnswer: true };
+    assert.equal(isActive(ready('ollama'), { ...finished, reopened: true }), true);
+    // Also for someone who was never guided: a model was already configured.
+    assert.equal(isActive(ready('ollama'), { ...emptyProgress(), reopened: true }), true);
+    assert.equal(isActive({ kind: 'loading' }, { ...finished, reopened: true }), false);
+    assert.equal(readProgress({ ...finished, reopened: true }).reopened, true);
+});
+
 test('stored progress ignores garbage', () => {
     assert.deepEqual(readProgress(null), emptyProgress());
     assert.deepEqual(readProgress({ version: 2 }), emptyProgress());
