@@ -657,7 +657,6 @@ function statusBar(model: BrokspaceModel): vscode.Disposable {
         switch (state.kind) {
             case 'ready': {
                 const running = state.status.daemon?.running;
-                const label = running ? t('Running') : t('Stopped');
                 const readiness = state.status.readiness;
                 const broken = searchBroken(readiness);
                 const percent = embeddedPercent(readiness);
@@ -670,7 +669,7 @@ function statusBar(model: BrokspaceModel): vscode.Disposable {
                 }
                 const summary = running
                     ? t('Brokspace is running: the index follows your edits. Click to open.')
-                    : `${label}. ${t('Brokspace is stopped: start it for live indexing. Click to open.')}`;
+                    : t('Brokspace is stopped: start it for live indexing. Click to open.');
                 item.tooltip = readiness ? readinessTooltip(summary, readiness) : summary;
                 break;
             }
