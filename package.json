@@ -588,7 +588,7 @@
     "@types/markdown-it": "^14.1.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.0",
-    "@types/react": "^19.1.0",
+    "@types/react": "^19.3.1",
     "@types/react-dom": "^19.1.0",
     "@types/vscode": "~1.90.0",
     "@vscode/codicons": "^0.0.45",
