@@ -646,6 +646,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 ) : (
                     <div className="bk-buttons">
                         <button
+                            id="bk-link-new"
                             type="button"
                             className="theia-button main"
                             onClick={() => {
@@ -795,6 +796,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                         onClick={() => {
                             this.linkDraft = emptyLink();
                             this.update();
+                            this.focusIfLost('bk-link-new');
                         }}
                     >
                         {t('Cancel')}
@@ -840,7 +842,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     t('Shards'),
                     t('Shards add integrations and skill packs. Manage them in the Brokspace view.'),
                     t('Manage'),
-                    'workbench.view.extension.brokspace',
+                    'brokspace.shards.focus',
                 )}
             </div>
         );
@@ -1371,6 +1373,8 @@ export class SettingsApp extends React.Component<{ host: Host }> {
         if (!root) {
             return;
         }
+        // Saving disables or replaces the control, which drops the keyboard focus.
+        const focused = document.activeElement?.id;
         this.busy.add(key);
         this.update();
         try {
@@ -1389,7 +1393,19 @@ export class SettingsApp extends React.Component<{ host: Host }> {
             this.busy.delete(key);
             await this.loadConfig();
             void this.host.rpc('refresh');
+            if (focused) {
+                this.focusIfLost(focused);
+            }
         }
+    }
+
+    /** Focuses the element, unless the user has moved to another one meanwhile. */
+    protected focusIfLost(id: string): void {
+        requestAnimationFrame(() => {
+            if (!document.activeElement || document.activeElement === document.body) {
+                document.getElementById(id)?.focus();
+            }
+        });
     }
 
     protected async restart(): Promise<void> {
@@ -1486,6 +1502,8 @@ export class SettingsApp extends React.Component<{ host: Host }> {
             const failed = results.filter((result) => result.error);
             if (failed.length) {
                 this.host.notify('error', failed.map((result) => `${result.name}: ${result.error}`).join('\n'));
+            } else {
+                this.host.notify('info', t('Linked workspaces are up to date.'));
             }
         } catch (error) {
             this.host.notify('error', message(error));

@@ -383,13 +383,20 @@ export class ChatPanel extends BrokspaceWebview {
 
     /** The chat in the Brokspace sidebar: the home of the assistant. It shares this conversation with the editor tab. */
     resolveWebviewView(view: vscode.WebviewView): void {
+        this.sidebar = view.webview;
+        view.onDidDispose(() => {
+            this.sidebar = undefined;
+        });
         view.webview.options = { enableScripts: true, localResourceRoots: this.resourceRoots() };
         this.attach(view.webview, view.onDidDispose.bind(view), 'workspace');
     }
 
+    private sidebar: vscode.Webview | undefined;
+
     /** Opens the chat in the sidebar; `prompt` is sent right away. */
     show(prompt?: string): void {
-        void vscode.commands.executeCommand('brokspace.chat.focus');
+        // A sidebar still loading starts on the chat; one already open may be on another tab.
+        void vscode.commands.executeCommand('brokspace.chat.focus').then(() => this.sidebar?.postMessage({ type: 'chat/reveal' }));
         this.sendPrompt(prompt);
     }
 

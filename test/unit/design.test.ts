@@ -66,6 +66,12 @@ test('colors come from the theme, with a fallback at most', () => {
     }
 });
 
+test('the keyboard focus follows the tabs, menus and chat commands', () => {
+    assert.match(read('workspace.tsx'), /chat\/reveal/);
+    assert.match(read('workspace.tsx'), /focusTab\(next\)/);
+    assert.match(read('menu.tsx'), /close\(true\);\s+item\.run\(\)/);
+});
+
 test('the settings sections stay named when only their icons show', () => {
     const nav = read('settings.tsx').split('className="bk-settings-nav"')[1]?.split('</nav>')[0] ?? '';
     assert.match(nav, /aria-label=\{sectionTitle\(id\)\}/);
