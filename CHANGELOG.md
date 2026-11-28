@@ -6,6 +6,10 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The status bar shows what works (keyword search, search by meaning, agent and model) in its tooltip, with one suggested next step you can run there or with **Brokspace: Run the Suggested Next Step**. It shows how much is embedded while search by meaning is being built, and warns when the index cannot be read. Needs brok 0.13 or newer; with older versions nothing changes ([brok#201](https://github.com/brokspace/brok/issues/201)).
+
 ## [0.5.2] - 2026-11-26
 
 ### Fixed

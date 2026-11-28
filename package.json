@@ -346,6 +346,11 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "brokspace.nextStep",
+        "title": "%cmd.nextStep%",
+        "category": "Brokspace"
+      },
+      {
         "command": "brokspace.installHelp",
         "title": "%cmd.installHelp%",
         "category": "Brokspace"

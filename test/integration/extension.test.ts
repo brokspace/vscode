@@ -40,6 +40,7 @@ suite('Brokspace for VS Code', () => {
             'brokspace.reportBug',
             'brokspace.showDiagnostics',
             'brokspace.commitMessage',
+            'brokspace.nextStep',
         ]) {
             assert.ok(commands.includes(id), `${id} is registered`);
         }

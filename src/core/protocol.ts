@@ -33,6 +33,20 @@ export interface BrokStatus {
     shards?: ShardInfo[];
     links?: LinkStatus[];
     memory?: { enabled: boolean; sessions: boolean; global: boolean; counts: Record<MemoryScope, number> };
+    /** What works right now (brok 0.13 and newer). */
+    readiness?: Readiness;
+}
+
+/**
+ * `readiness` of `brok status --json`. The values are open: a newer brok may
+ * send states and codes this extension does not know.
+ */
+export interface Readiness {
+    text_search: { state: string };
+    meaning_search: { state: string; embedded: number; chunks: number };
+    agent: { state: string };
+    model: { state: string };
+    next_action?: { code: string; command?: string } | null;
 }
 
 export type MemoryScope = 'private' | 'shared' | 'global';

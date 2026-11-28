@@ -51,6 +51,7 @@
   "cmd.removeShard": "Remover Shard…",
   "cmd.addProvider": "Adicionar Provedor de LLM…",
   "cmd.refresh": "Atualizar Status",
+  "cmd.nextStep": "Executar o Próximo Passo Sugerido",
   "cmd.installHelp": "Como Instalar o brok",
   "chat.description": "Respostas sobre este workspace do seu próprio LLM, pelo brok, com fontes",
   "chat.review": "Revisar suas alterações não commitadas (adicione `staged` ou `base <ref>`)",
