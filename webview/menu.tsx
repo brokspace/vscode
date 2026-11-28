@@ -160,7 +160,8 @@ export function PopMenu({
                                 tabIndex={index === current ? 0 : -1}
                                 className="bk-nav-item"
                                 onClick={() => {
-                                    close(false);
+                                    // The button keeps the focus unless what runs moves it.
+                                    close(true);
                                     item.run();
                                 }}
                             >

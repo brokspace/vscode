@@ -25,9 +25,12 @@ const markdown = new MarkdownIt({ html: false, linkify: true, breaks: false });
 export function ChatApp({
     host,
     onOpenSettings,
+    reveals,
 }: {
     host: Host;
     onOpenSettings?: (section?: SettingsSection) => void;
+    /** Changes each time the sidebar is asked to show the chat. */
+    reveals?: number;
 }): React.ReactElement {
     const [turns, setTurns] = React.useState<ChatTurn[]>([]);
     const [progress, setProgress] = React.useState<Record<string, string>>({});
@@ -102,9 +105,10 @@ export function ChatApp({
     React.useEffect(() => {
         end.current?.scrollIntoView({ block: 'end' });
     }, [turns, progress]);
+    // biome-ignore lint/correctness/useExhaustiveDependencies: focus on opening, and each time the chat is asked for.
     React.useEffect(() => {
         input.current?.focus();
-    }, []);
+    }, [reveals]);
 
     const running = turns.some((turn) => !turn.done);
     // Asked for again, the checklist shows above the conversation too.

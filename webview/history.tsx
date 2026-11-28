@@ -32,18 +32,26 @@ export function HistoryApp({ host, active, onOpened }: { host: Host; active: boo
         }
     }, [active, load]);
 
+    const search = React.useRef<HTMLInputElement>(null);
+
     const act = async (method: string, id?: string) => {
+        const opener = document.activeElement as HTMLElement | null;
         const done = await host.rpc<boolean>(method, id);
         if (done && method === 'openSession') {
             onOpened();
         }
         await load();
+        if (method !== 'openSession') {
+            // A dialog or input box took the focus: give it back, or to the search box when the button is gone.
+            requestAnimationFrame(() => (opener?.isConnected ? opener : search.current)?.focus());
+        }
     };
 
     return (
         <div className="bk-history">
             <div className="bk-history-tools">
                 <input
+                    ref={search}
                     type="search"
                     className="theia-input bk-text"
                     value={query}

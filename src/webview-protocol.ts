@@ -73,6 +73,8 @@ export type HostMessage =
     | { type: 'context/state'; items: ContextChip[]; limit: number }
     | { type: 'editor/state'; file?: string; selection: boolean; sendWith: 'enter' | 'ctrlEnter' }
     | { type: 'chat/state'; turns: ChatTurn[] }
+    /** A command or shortcut asked for the chat: the sidebar leaves other tabs and focuses the message box. */
+    | { type: 'chat/reveal' }
     | { type: 'chat/turn'; turn: ChatTurn }
     | { type: 'chat/progress'; id: string; text: string }
     | { type: 'chat/chunk'; id: string; text: string }

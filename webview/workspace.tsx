@@ -9,6 +9,11 @@ import { SettingsApp } from './settings';
 
 type View = 'chat' | 'history' | 'settings';
 
+/** The tab takes the focus: what had it is hidden with its panel. */
+function focusTab(id: View): void {
+    requestAnimationFrame(() => document.getElementById(`bk-tab-${id}`)?.focus());
+}
+
 /**
  * The Brokspace sidebar: the chat and the settings in one place. Both stay
  * mounted, so going to Settings and back keeps the draft, the conversation
@@ -17,6 +22,21 @@ type View = 'chat' | 'history' | 'settings';
 export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
     const [view, setView] = React.useState<View>('chat');
     const settings = React.useRef<SettingsApp>(null);
+    // Counts the times the chat was asked for, so that it takes the focus each time.
+    const [reveals, setReveals] = React.useState(0);
+    const showChat = React.useCallback(() => {
+        setView('chat');
+        setReveals((count) => count + 1);
+    }, []);
+    React.useEffect(
+        () =>
+            host.on((msg) => {
+                if (msg.type === 'chat/reveal') {
+                    showChat();
+                }
+            }),
+        [host, showChat],
+    );
     const views: { id: View; label: string; icon: string }[] = [
         { id: 'chat', label: t('Chat'), icon: 'comment-discussion' },
         { id: 'history', label: t('History'), icon: 'history' },
@@ -26,15 +46,16 @@ export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
     const openSettings = React.useCallback((section: SettingsSection = 'overview') => {
         setView('settings');
         settings.current?.showSection(section);
+        focusTab('settings');
     }, []);
 
     const onKeyDown = (event: React.KeyboardEvent) => {
         if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
             const order: View[] = ['chat', 'history', 'settings'];
-            setView((current) => {
-                const step = event.key === 'ArrowRight' ? 1 : order.length - 1;
-                return order[(order.indexOf(current) + step) % order.length] as View;
-            });
+            const step = event.key === 'ArrowRight' ? 1 : order.length - 1;
+            const next = order[(order.indexOf(view) + step) % order.length] as View;
+            setView(next);
+            focusTab(next);
             event.preventDefault();
         }
     };
@@ -66,7 +87,7 @@ export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
                 className="bk-workspace-panel"
                 hidden={view !== 'chat'}
             >
-                <ChatApp host={host} onOpenSettings={openSettings} />
+                <ChatApp host={host} onOpenSettings={openSettings} reveals={reveals} />
             </section>
             <section
                 id="bk-panel-history"
@@ -75,7 +96,7 @@ export function WorkspaceApp({ host }: { host: Host }): React.ReactElement {
                 className="bk-workspace-panel bk-workspace-scroll"
                 hidden={view !== 'history'}
             >
-                <HistoryApp host={host} active={view === 'history'} onOpened={() => setView('chat')} />
+                <HistoryApp host={host} active={view === 'history'} onOpened={showChat} />
             </section>
             <section
                 id="bk-panel-settings"

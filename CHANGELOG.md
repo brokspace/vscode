@@ -12,6 +12,9 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- **Brokspace: Open Chat** and its shortcut, **New Chat**, **Get Started**, asking and reviewing show the chat when the sidebar is on History or Settings, and put the cursor in the message box. Before, the tab did not change, so an answer could be written out of sight ([#44](https://github.com/brokspace/vscode/issues/44)).
+- The keyboard focus stays in place: arrows move it with the selected tab, and it is no longer lost after choosing from a menu, opening, renaming or deleting a conversation, saving a setting or cancelling a link ([#47](https://github.com/brokspace/vscode/issues/47)).
+- In Settings, **Manage** under Shards opens the Shards view (it did nothing), and syncing linked workspaces says when they are up to date ([#41](https://github.com/brokspace/vscode/issues/41)).
 - Opening the Brokspace view shows the chat: the Overview and Memory views start collapsed, which had squeezed the chat until its message box was out of sight. A layout you already arranged is kept ([#40](https://github.com/brokspace/vscode/issues/40)).
 - Switching the model in the chat restarts a running brok. Before, the chat showed the new model while questions still went to the old one ([#41](https://github.com/brokspace/vscode/issues/41)). The switch waits while an answer is being written.
 - The getting-started checklist no longer marks the model step done when brok 0.13 or newer reports that the model cannot be used, such as a local server that is not running ([#46](https://github.com/brokspace/vscode/issues/46)).
