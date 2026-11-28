@@ -273,7 +273,7 @@ export function ChatApp({
                 <span className="bk-chat-title" title={host.root ?? 'Brokspace'}>
                     {folder ?? 'Brokspace'}
                 </span>
-                <ModelPill host={host} model={llm} onOpenSettings={openSettings} onIndexOnly={() => suggest('/search ')} />
+                <ModelPill host={host} model={llm} busy={running} onOpenSettings={openSettings} onIndexOnly={() => suggest('/search ')} />
                 <span className="bk-spacer" />
                 <PopMenu
                     label={t('Tools: search, memories, skills and more')}

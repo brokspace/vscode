@@ -9,6 +9,7 @@ uses [Semantic Versioning](https://semver.org/).
 ### Fixed
 
 - Opening the Brokspace view shows the chat: the Overview and Memory views start collapsed, which had squeezed the chat until its message box was out of sight. A layout you already arranged is kept ([#40](https://github.com/brokspace/vscode/issues/40)).
+- Switching the model in the chat restarts a running brok. Before, the chat showed the new model while questions still went to the old one ([#41](https://github.com/brokspace/vscode/issues/41)). The switch waits while an answer is being written.
 - **Brokspace: Get Started** shows the checklist again after the first answer too. Before, it showed nothing ([#46](https://github.com/brokspace/vscode/issues/46)).
 - The model menu takes the keyboard when it opens, also while the models load, so arrows and Escape work ([#44](https://github.com/brokspace/vscode/issues/44)).
 - Screen readers hear the names of the settings sections in a narrow sidebar, where only icons show, and the sections wrap instead of scrolling out of view ([#47](https://github.com/brokspace/vscode/issues/47)).

@@ -55,6 +55,10 @@ test('the settings sections stay named when only their icons show', () => {
     assert.match(nav, /aria-label=\{sectionTitle\(id\)\}/);
 });
 
+test('switching the model from the chat restarts a running brok', () => {
+    assert.match(read('modelpill.tsx'), /running \? host\.command\('brokspace\.restart'\)/);
+});
+
 test('streamed answers are announced through a status region, not the whole log', () => {
     const chat = read('chat.tsx');
     assert.match(chat, /role="status"/);
