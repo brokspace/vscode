@@ -37,6 +37,14 @@ Literal colors are not allowed except the brand token and a fallback inside `var
 
 Icons are Codicons (`codicon(name)`); no emoji is used as a control.
 
+## Examples
+
+Rendered from the extension's own UI with sample data (see [Checking by hand](#checking-by-hand)).
+
+| Narrow sidebar                                          | Model menu, light theme                                           | Context menu, dark theme                                                     |
+| ------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| ![The chat in a narrow sidebar](images/narrow-dark.png) | ![The model menu of the chat header](images/model-menu-light.png) | ![The menu of context sources in the composer](images/context-menu-dark.png) |
+
 ## Accessibility
 
 - **Keyboard:** every control is a real `button`, `a`, field or has a role and a `tabindex`; tabs, the slash menu and prompt recall have arrow-key support. One focus ring (`:focus-visible`, 2 px `--bk-focus`) applies to all of them.
