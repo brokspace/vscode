@@ -920,6 +920,22 @@ body.vscode-high-contrast-light .bk-workspace-tab-on {
     flex: 0;
 }
 
+/* In the narrowest sidebar the folder name and decorations make room for the model. */
+@container (max-width: 220px) {
+    .bk-chat-head {
+        gap: var(--bk-space-1);
+        padding-inline: var(--bk-space-2);
+    }
+    .bk-chat-head .bk-chat-title,
+    .bk-chat-head .bk-tools .codicon-chevron-down {
+        display: none;
+    }
+    .bk-chat-head .bk-nav:has(.bk-pill) {
+        flex: 1;
+        min-width: 0;
+    }
+}
+
 /* ---------------------------------------------------------------- composer, pills, message footer */
 
 .bk-composer {

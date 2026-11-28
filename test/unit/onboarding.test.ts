@@ -35,6 +35,29 @@ test('an existing install and workspace are detected as done', () => {
     }
 });
 
+test('a model brok cannot use is not done', () => {
+    const base = ready('ollama') as Extract<BrokspaceState, { kind: 'ready' }>;
+    const withModel = (state: string): BrokspaceState => ({
+        ...base,
+        status: {
+            ...base.status,
+            readiness: {
+                text_search: { state: 'ready' },
+                meaning_search: { state: 'ready', embedded: 1, chunks: 1 },
+                agent: { state: 'ready' },
+                model: { state },
+            },
+        },
+    });
+    for (const state of ['unreachable', 'not_installed', 'missing_key', 'not_configured']) {
+        assert.equal(status(checklist(withModel(state), emptyProgress()), 'model'), 'todo', state);
+    }
+    // A hosted model is not contacted, and a newer brok may say something else.
+    for (const state of ['ready', 'unchecked', 'something_new']) {
+        assert.equal(status(checklist(withModel(state), emptyProgress()), 'model'), 'done', state);
+    }
+});
+
 test('optional steps never block and can be skipped', () => {
     const progress = { ...emptyProgress(), acknowledged: true, skipped: ['model' as const] };
     const steps = checklist(ready(), progress);
@@ -53,6 +76,15 @@ test('the checklist goes away after the first answer or when closed', () => {
     assert.equal(isActive({ kind: 'no-folder' }, { ...emptyProgress(), firstAnswer: true }), true);
     assert.equal(isActive(ready(), { ...emptyProgress(), dismissed: true }), false);
     assert.equal(isActive({ kind: 'loading' }, emptyProgress()), false);
+});
+
+test('asked for again, the checklist shows until it is closed', () => {
+    const finished = { ...emptyProgress(), acknowledged: true, firstAnswer: true };
+    assert.equal(isActive(ready('ollama'), { ...finished, reopened: true }), true);
+    // Also for someone who was never guided: a model was already configured.
+    assert.equal(isActive(ready('ollama'), { ...emptyProgress(), reopened: true }), true);
+    assert.equal(isActive({ kind: 'loading' }, { ...finished, reopened: true }), false);
+    assert.equal(readProgress({ ...finished, reopened: true }).reopened, true);
 });
 
 test('stored progress ignores garbage', () => {

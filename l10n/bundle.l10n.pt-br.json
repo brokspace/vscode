@@ -490,5 +490,8 @@
   "Show the logs": "Mostrar os logs",
   "Start Brokspace": "Iniciar o Brokspace",
   "Update brok": "Atualizar o brok",
-  "{0}% embedded": "{0}% com embeddings"
+  "{0}% embedded": "{0}% com embeddings",
+  "Answer ready, with 1 source": "Resposta pronta, com 1 fonte",
+  "Activity: 1 step": "Atividade: 1 etapa",
+  "1 message": "1 mensagem"
 }

@@ -30,12 +30,16 @@ export interface Progress {
     firstAnswer: boolean;
     /** The checklist was closed by the user. */
     dismissed: boolean;
+    /** The user asked for the checklist again: it stays until closed. */
+    reopened: boolean;
 }
+
+const UNUSABLE_MODEL = ['unreachable', 'not_installed', 'missing_key', 'not_configured'];
 
 export const OPTIONAL: readonly StepId[] = ['model', 'memory', 'mcp', 'links'];
 
 export function emptyProgress(): Progress {
-    return { version: 1, acknowledged: false, skipped: [], firstAnswer: false, dismissed: false };
+    return { version: 1, acknowledged: false, skipped: [], firstAnswer: false, dismissed: false, reopened: false };
 }
 
 /** Reads stored progress, ignoring anything malformed. */
@@ -54,6 +58,7 @@ export function readProgress(raw: unknown): Progress {
         skipped: Array.isArray(value.skipped) ? value.skipped.filter((id): id is StepId => OPTIONAL.includes(id as StepId)) : [],
         firstAnswer: value.firstAnswer === true,
         dismissed: value.dismissed === true,
+        reopened: value.reopened === true,
     };
 }
 
@@ -68,7 +73,8 @@ export function checklist(state: BrokspaceState, progress: Progress, mcpEnabled 
         brok: state.kind !== 'loading' && state.kind !== 'no-brok' && state.kind !== 'outdated',
         folder: state.kind !== 'loading' && state.kind !== 'no-folder',
         workspace: ready,
-        model: !!provider && provider !== 'none',
+        // A configured model that brok reports unusable still needs the user (brok 0.13 and newer).
+        model: !!provider && provider !== 'none' && !UNUSABLE_MODEL.includes(status?.readiness?.model.state ?? ''),
         first: progress.firstAnswer,
         memory: memories > 0,
         mcp: ready && mcpEnabled,
@@ -94,12 +100,18 @@ export function checklist(state: BrokspaceState, progress: Progress, mcpEnabled 
 }
 
 /**
- * Whether the checklist is shown: not closed, and the first answer not yet
- * given. Someone who already has a working workspace with a model (an
+ * Whether the checklist is shown: asked for again, or not closed and the
+ * first answer not yet given. Someone who already has a working workspace with a model (an
  * existing user) is never guided through it.
  */
 export function isActive(state: BrokspaceState, progress: Progress): boolean {
-    if (progress.dismissed || (progress.firstAnswer && state.kind === 'ready') || state.kind === 'loading') {
+    if (state.kind === 'loading') {
+        return false;
+    }
+    if (progress.reopened) {
+        return true;
+    }
+    if (progress.dismissed || (progress.firstAnswer && state.kind === 'ready')) {
         return false;
     }
     if (state.kind === 'ready' && !progress.acknowledged && state.status.llm && state.status.llm.provider !== 'none') {

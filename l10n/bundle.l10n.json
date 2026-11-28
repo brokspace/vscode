@@ -1,4 +1,5 @@
 {
+  "1 message": "1 message",
   "A Brokspace workspace: its own index and memories are used.": "A Brokspace workspace: its own index and memories are used.",
   "A folder you pick": "A folder you pick",
   "A local embedding model ({0}) finds code by meaning, not only by words. Turning it on or off rebuilds the index.": "A local embedding model ({0}) finds code by meaning, not only by words. Turning it on or off rebuilds the index.",
@@ -7,6 +8,7 @@
   "API key variable": "API key variable",
   "About": "About",
   "Activity": "Activity",
+  "Activity: 1 step": "Activity: 1 step",
   "Activity: {0} steps": "Activity: {0} steps",
   "Add Agent Files": "Add Agent Files",
   "Add context: files, selection, Git changes, problems": "Add context: files, selection, Git changes, problems",
@@ -24,6 +26,7 @@
   "Also add files so your coding agents can use Brokspace?": "Also add files so your coding agents can use Brokspace?",
   "Also how much context a question gets.": "Also how much context a question gets.",
   "Answer ready": "Answer ready",
+  "Answer ready, with 1 source": "Answer ready, with 1 source",
   "Answer ready, with {0} sources": "Answer ready, with {0} sources",
   "Answers": "Answers",
   "Answers come from the index. Connect an LLM to get written answers.": "Answers come from the index. Connect an LLM to get written answers.",

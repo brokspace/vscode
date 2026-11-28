@@ -14,11 +14,14 @@ import { type MenuItem, PopMenu } from './menu';
 export function ModelPill({
     host,
     model,
+    busy,
     onOpenSettings,
     onIndexOnly,
 }: {
     host: Host;
     model: string | undefined;
+    /** An answer is being written: switching would interrupt it. */
+    busy: boolean;
     onOpenSettings: (section?: SettingsSection) => void;
     onIndexOnly: () => void;
 }): React.ReactElement {
@@ -47,8 +50,13 @@ export function ModelPill({
         );
     };
     const choose = (name: string) => {
+        if (name === config?.default) {
+            return;
+        }
+        // A running brok keeps the model it started with: restart it, or questions still go to the old one.
+        const running = host.state.kind === 'ready' && !!host.state.status.daemon?.running;
         host.rpc('setConfig', 'llm.default', name).then(
-            () => host.rpc('refresh'),
+            () => (running ? host.command('brokspace.restart') : host.rpc('refresh')),
             (error: Error) => host.notify('error', error.message),
         );
     };
@@ -59,6 +67,7 @@ export function ModelPill({
             label: provider.model,
             hint: name,
             checked: name === config?.default,
+            disabled: busy,
             run: () => choose(name),
         })),
         ...(!config && !failed ? [{ id: 'loading', label: t('Loading…'), disabled: true, run: () => undefined }] : []),

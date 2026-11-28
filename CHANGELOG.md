@@ -10,6 +10,16 @@ uses [Semantic Versioning](https://semver.org/).
 
 - The status bar shows what works (keyword search, search by meaning, agent and model) in its tooltip, with one suggested next step you can run there or with **Brokspace: Run the Suggested Next Step**. It shows how much is embedded while search by meaning is being built, and warns when the index cannot be read. Needs brok 0.13 or newer; with older versions nothing changes ([brok#201](https://github.com/brokspace/brok/issues/201)).
 
+### Fixed
+
+- Opening the Brokspace view shows the chat: the Overview and Memory views start collapsed, which had squeezed the chat until its message box was out of sight. A layout you already arranged is kept ([#40](https://github.com/brokspace/vscode/issues/40)).
+- Switching the model in the chat restarts a running brok. Before, the chat showed the new model while questions still went to the old one ([#41](https://github.com/brokspace/vscode/issues/41)). The switch waits while an answer is being written.
+- The getting-started checklist no longer marks the model step done when brok 0.13 or newer reports that the model cannot be used, such as a local server that is not running ([#46](https://github.com/brokspace/vscode/issues/46)).
+- **Brokspace: Get Started** shows the checklist again after the first answer too. Before, it showed nothing ([#46](https://github.com/brokspace/vscode/issues/46)).
+- The model menu takes the keyboard when it opens, also while the models load, so arrows and Escape work ([#44](https://github.com/brokspace/vscode/issues/44)).
+- Screen readers hear the names of the settings sections in a narrow sidebar, where only icons show, and the sections wrap instead of scrolling out of view ([#47](https://github.com/brokspace/vscode/issues/47)).
+- The history search box follows the editor theme, the model name stays visible in the narrowest sidebar, and counts of one read in the singular ([#47](https://github.com/brokspace/vscode/issues/47)).
+
 ## [0.5.2] - 2026-11-26
 
 ### Fixed
