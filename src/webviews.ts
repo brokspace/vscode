@@ -415,6 +415,8 @@ export class ChatPanel extends BrokspaceWebview {
 
     protected override onReady(): void {
         this.post({ type: 'chat/state', turns: this.turns });
+        // The stored choices, or a page opened later (after a restart) would start the checklist from nothing.
+        this.postOnboarding();
         this.postContext();
         this.postEditor();
     }

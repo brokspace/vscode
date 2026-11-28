@@ -12,6 +12,9 @@ uses [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- The getting-started checklist keeps its progress after VS Code restarts. A newly opened chat never received it, so a checklist in progress disappeared once a model was configured, and a closed one could come back ([#46](https://github.com/brokspace/vscode/issues/46)).
+- When setup is cancelled while indexing, the getting-started checklist keeps **Set up this folder** open and offers **Finish indexing**. Before, it was marked done. Needs brok 0.13 or newer ([#46](https://github.com/brokspace/vscode/issues/46)).
+- A download of brok that cannot reach GitHub says so, with **Try Again** and **Install Guide**. Before, the message was only "fetch failed" ([#46](https://github.com/brokspace/vscode/issues/46)).
 - **Brokspace: Open Chat** and its shortcut, **New Chat**, **Get Started**, asking and reviewing show the chat when the sidebar is on History or Settings, and put the cursor in the message box. Before, the tab did not change, so an answer could be written out of sight ([#44](https://github.com/brokspace/vscode/issues/44)).
 - The keyboard focus stays in place: arrows move it with the selected tab, and it is no longer lost after choosing from a menu, opening, renaming or deleting a conversation, saving a setting or cancelling a link ([#47](https://github.com/brokspace/vscode/issues/47)).
 - In Settings, **Manage** under Shards opens the Shards view (it did nothing), and syncing linked workspaces says when they are up to date ([#41](https://github.com/brokspace/vscode/issues/41)).

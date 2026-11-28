@@ -72,6 +72,12 @@ test('the keyboard focus follows the tabs, menus and chat commands', () => {
     assert.match(read('menu.tsx'), /close\(true\);\s+item\.run\(\)/);
 });
 
+test('a page that loads gets the stored getting-started progress', () => {
+    const source = fs.readFileSync(path.join(dir, '..', 'src', 'webviews.ts'), 'utf8');
+    const ready = [...source.matchAll(/protected override onReady\(\): void \{[\s\S]*?\n {4}\}/g)].map((match) => match[0]);
+    assert.ok(ready.some((body) => body.includes("'chat/state'") && body.includes('this.postOnboarding()')));
+});
+
 test('the settings sections stay named when only their icons show', () => {
     const nav = read('settings.tsx').split('className="bk-settings-nav"')[1]?.split('</nav>')[0] ?? '';
     assert.match(nav, /aria-label=\{sectionTitle\(id\)\}/);
