@@ -320,7 +320,7 @@ export function ChatApp({
                 )}
                 {ready && turns.length === 0 && (
                     <div className="bk-chat-empty">
-                        <span className={`bk-chat-mark ${codicon('comment-discussion')}`} />
+                        <span className={`bk-chat-mark ${codicon('comment-discussion')}`} aria-hidden="true" />
                         <p className="bk-chat-lead">{t('Ask about this workspace. Answers cite the code they come from.')}</p>
                         <div className="bk-suggestions">
                             {[
@@ -338,7 +338,7 @@ export function ChatApp({
                                     className="bk-suggestion"
                                     onClick={() => suggest(t('Explain the attached code'), 'selection')}
                                 >
-                                    <span className={codicon('list-selection')} /> {t('Explain the selected code')}
+                                    <span className={codicon('list-selection')} aria-hidden="true" /> {t('Explain the selected code')}
                                 </button>
                             )}
                             {editor.file && (
@@ -347,11 +347,11 @@ export function ChatApp({
                                     className="bk-suggestion"
                                     onClick={() => suggest(t('What does the attached file do?'), 'file')}
                                 >
-                                    <span className={codicon('file-code')} /> {t('What does {0} do?', editor.file)}
+                                    <span className={codicon('file-code')} aria-hidden="true" /> {t('What does {0} do?', editor.file)}
                                 </button>
                             )}
                             <button type="button" className="bk-suggestion" onClick={() => suggest('/review')}>
-                                <span className={codicon('checklist')} /> {t('Review my changes')}
+                                <span className={codicon('checklist')} aria-hidden="true" /> {t('Review my changes')}
                             </button>
                         </div>
                     </div>
@@ -494,14 +494,14 @@ function Turn({ turn, progress, host, busy }: { turn: ChatTurn; progress?: strin
             <div className="bk-question">{turn.question}</div>
             {turn.context && turn.context.length > 0 && (
                 <div className="bk-turn-context">
-                    <span className={codicon('attach')} /> {t('Context')}: {turn.context.join(', ')}
+                    <span className={codicon('attach')} aria-hidden="true" /> {t('Context')}: {turn.context.join(', ')}
                 </div>
             )}
             {turn.steps && turn.steps.length > 0 && <Activity steps={turn.steps} running={!turn.done} host={host} />}
             <div className="bk-answer">
                 {!turn.done && !turn.answer && (
                     <div className="bk-progress">
-                        <span className={`${codicon('loading')} codicon-modifier-spin`} /> {progress ?? t('Thinking…')}
+                        <span className={`${codicon('loading')} codicon-modifier-spin`} aria-hidden="true" /> {progress ?? t('Thinking…')}
                     </div>
                 )}
                 {turn.answer && (
@@ -520,7 +520,7 @@ function Turn({ turn, progress, host, busy }: { turn: ChatTurn; progress?: strin
                 )}
                 {turn.error && (
                     <div className="bk-turn-error">
-                        <span className={codicon('error')} /> {turn.error}
+                        <span className={codicon('error')} aria-hidden="true" /> {turn.error}
                         <button
                             type="button"
                             className="bk-link-button"

@@ -16,16 +16,32 @@ function tags(source: string, element: string): string[] {
     return [...source.matchAll(new RegExp(`<${element}\\b(?:[^<>{}]|\\{(?:[^{}]|\\{[^{}]*\\})*\\})*>`, 'g'))].map((match) => match[0]);
 }
 
-test('an icon-only button, input and text box have an accessible name', () => {
+test('icon buttons, fields and radio groups have an accessible name', () => {
     for (const name of sources) {
         const source = read(name);
         for (const tag of tags(source, 'button').filter((tag) => tag.includes('bk-icon-button'))) {
             assert.match(tag, /aria-label=/, `${name}: icon button without aria-label`);
         }
-        // A field is named by aria-label, or by the <label> that wraps it (checked by hand: bug report, link and memory forms).
-        for (const tag of [...tags(source, 'input'), ...tags(source, 'textarea')]) {
-            const wrapped = /type="checkbox"|rows=\{/.test(tag);
-            assert.ok(wrapped || /aria-label=|aria-labelledby=|id=/.test(tag), `${name}: field without a name: ${tag.slice(0, 80)}`);
+        // A field is named by its <label> (wrapping it, or pointing at its id) or else by aria-label.
+        // Both at once is wrong: aria-label wins, and screen readers then hear the example text, not the label.
+        for (const element of ['input', 'textarea', 'select']) {
+            for (const tag of tags(source, element)) {
+                const before = source.slice(0, source.indexOf(tag));
+                const labelled = before.lastIndexOf('<label') > before.lastIndexOf('</label>') || tag.includes('id=');
+                const named = /aria-label=|aria-labelledby=/.test(tag);
+                assert.ok(labelled !== named, `${name}: field needs exactly one name: ${tag.slice(0, 120)}`);
+            }
+        }
+        for (const tag of tags(source, 'div').filter((tag) => tag.includes('role="radiogroup"'))) {
+            assert.match(tag, /aria-label=/, `${name}: radio group without a name`);
+        }
+    }
+});
+
+test('icons are not read aloud, and the ones that carry meaning have a name', () => {
+    for (const name of sources) {
+        for (const tag of tags(read(name), 'span').filter((tag) => tag.includes('codicon(') && tag.endsWith('/>'))) {
+            assert.match(tag, /aria-hidden="true"|role="img"[^>]*aria-label=/, `${name}: ${tag.slice(0, 120)}`);
         }
     }
 });
