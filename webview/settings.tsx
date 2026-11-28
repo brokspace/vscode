@@ -132,7 +132,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
         if (state.kind !== 'ready') {
             return (
                 <div className="bk-settings-empty">
-                    <span className={`bk-card-icon ${codicon('settings-gear')}`} />
+                    <span className={`bk-card-icon ${codicon('settings-gear')}`} aria-hidden="true" />
                     <p>{t('Brokspace settings appear once Brokspace is set up in this folder.')}</p>
                     <button type="button" className="theia-button main" onClick={() => this.run('workbench.view.extension.brokspace')}>
                         {t('Open Brokspace')}
@@ -153,7 +153,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             title={sectionTitle(id)}
                             onClick={() => this.showSection(id)}
                         >
-                            <span className={codicon(icon)} />
+                            <span className={codicon(icon)} aria-hidden="true" />
                             <span>{sectionTitle(id)}</span>
                         </button>
                     ))}
@@ -165,7 +165,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     </header>
                     {this.needsRestart && state.status.daemon?.running && (
                         <div className="bk-banner">
-                            <span className={codicon('info')} />
+                            <span className={codicon('info')} aria-hidden="true" />
                             <span>{t('Brokspace is running with the previous settings.')}</span>
                             <button type="button" className="theia-button main" onClick={() => this.restart()}>
                                 {t('Restart now')}
@@ -174,7 +174,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     )}
                     {this.configError && (
                         <div className="bk-banner bk-banner-error">
-                            <span className={codicon('error')} />
+                            <span className={codicon('error')} aria-hidden="true" />
                             <span>{this.configError}</span>
                         </div>
                     )}
@@ -220,7 +220,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
         const memories = counts ? counts.private + counts.shared + counts.global : 0;
         const tile = (icon: string, label: string, value: string, section?: SettingsSection) => (
             <button type="button" className="bk-tile" disabled={!section} onClick={() => section && this.showSection(section)}>
-                <span className={`bk-tile-icon ${codicon(icon)}`} />
+                <span className={`bk-tile-icon ${codicon(icon)}`} aria-hidden="true" />
                 <span className="bk-tile-label">{label}</span>
                 <span className="bk-tile-value" title={value}>
                     {value}
@@ -311,7 +311,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 </p>
                 <div className="bk-buttons">
                     <button type="button" className="theia-button secondary" onClick={() => this.addProvider()}>
-                        <span className={codicon('add')} /> {t('Add provider')}
+                        <span className={codicon('add')} aria-hidden="true" /> {t('Add provider')}
                     </button>
                     <button type="button" className="theia-button secondary" onClick={() => this.run('brokspace.doctor')}>
                         {t('Check the connection')}
@@ -324,7 +324,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
     protected renderProvider(name: string, provider: LlmProvider, isDefault: boolean): React.ReactNode {
         const key = `llm.providers.${name}`;
         return (
-            <section key={name} className="bk-settings-group">
+            <section key={name} className="bk-settings-group" aria-label={name}>
                 <div className="bk-group-head">
                     <span className="bk-group-title">{name}</span>
                     {isDefault && <span className="bk-badge bk-badge-accent">{t('default')}</span>}
@@ -484,7 +484,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             this.update();
                         }}
                     >
-                        <span className={codicon(this.showDraft ? 'close' : 'add')} /> {t('New memory')}
+                        <span className={codicon(this.showDraft ? 'close' : 'add')} aria-hidden="true" /> {t('New memory')}
                     </button>
                 </div>
                 {this.showDraft && this.renderDraft()}
@@ -500,7 +500,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             this.update();
                         }}
                     />
-                    <div className="bk-chips" role="radiogroup">
+                    <div className="bk-chips" role="radiogroup" aria-label={t('Who sees it')}>
                         {(['all', ...MEMORY_SCOPES] as const).map((scope) => (
                             <button
                                 type="button"
@@ -653,7 +653,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                                 this.update();
                             }}
                         >
-                            <span className={codicon('link')} /> {t('Link a workspace')}
+                            <span className={codicon('link')} aria-hidden="true" /> {t('Link a workspace')}
                         </button>
                         {links.length > 0 && (
                             <button
@@ -662,7 +662,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                                 disabled={this.busy.has('sync')}
                                 onClick={() => this.syncLinks()}
                             >
-                                <span className={codicon('sync')} /> {t('Sync all')}
+                                <span className={codicon('sync')} aria-hidden="true" /> {t('Sync all')}
                             </button>
                         )}
                     </div>
@@ -676,7 +676,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
         return (
             <section key={link.name} className="bk-settings-group">
                 <div className="bk-group-head">
-                    <span className={codicon(link.kind === 'git' ? 'repo' : 'folder')} />
+                    <span className={codicon(link.kind === 'git' ? 'repo' : 'folder')} aria-hidden="true" />
                     <span className="bk-group-title">{link.name}</span>
                     <span className="bk-badge">{link.kind === 'git' ? 'git' : t('folder')}</span>
                     {link.index === 'own' && (
@@ -730,12 +730,13 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 <div className="bk-group-head">
                     <span className="bk-group-title">{t('Link a workspace')}</span>
                 </div>
-                <label className="bk-field">
+                <div className="bk-field">
                     <span>{t('Folder or git URL')}</span>
                     <div className="bk-draft-row">
                         <input
                             className="theia-input bk-grow bk-mono"
                             autoFocus
+                            aria-label={t('Folder or git URL')}
                             placeholder="../checkout · https://github.com/acme/checkout.git"
                             value={draft.target}
                             onChange={(e) => {
@@ -747,13 +748,12 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             {t('Choose folder…')}
                         </button>
                     </div>
-                </label>
+                </div>
                 <div className="bk-draft-row">
                     <label className="bk-field bk-grow">
                         <span>{t('Name')}</span>
                         <input
                             className="theia-input"
-                            aria-label="checkout"
                             placeholder="checkout"
                             value={draft.name}
                             onChange={(e) => set({ name: e.currentTarget.value })}
@@ -764,7 +764,6 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             <span>{t('Branch')}</span>
                             <input
                                 className="theia-input"
-                                aria-label="main"
                                 placeholder="main"
                                 value={draft.branch ?? ''}
                                 onChange={(e) => set({ branch: e.currentTarget.value })}
@@ -776,7 +775,6 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     <span>{t('How this workspace uses it (optional, helps the AI)')}</span>
                     <input
                         className="theia-input"
-                        aria-label={t('Carts and payments; we call its createOrder API')}
                         placeholder={t('Carts and payments; we call its createOrder API')}
                         value={draft.description ?? ''}
                         onChange={(e) => set({ description: e.currentTarget.value })}
@@ -809,7 +807,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
     protected renderAgents(): React.ReactNode {
         const action = (icon: string, title: string, text: string, label: string, command: string) => (
             <div className="bk-setting">
-                <span className={`bk-setting-icon ${codicon(icon)}`} />
+                <span className={`bk-setting-icon ${codicon(icon)}`} aria-hidden="true" />
                 <div className="bk-setting-text">
                     <div className="bk-setting-label">{title}</div>
                     <div className="bk-setting-description">{text}</div>
@@ -896,7 +894,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                         {t('Open brok.yml')}
                     </button>
                     <button type="button" className="theia-button secondary" onClick={() => this.showSection('report')}>
-                        <span className={codicon('bug')} /> {t('Report a bug')}
+                        <span className={codicon('bug')} aria-hidden="true" /> {t('Report a bug')}
                     </button>
                 </div>
             </>
@@ -909,7 +907,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
         const ms = (value?: number | null) => (value === undefined || value === null ? '—' : formatMs(value));
         const tile = (icon: string, label: string, value: string, detail: string, warn = false) => (
             <div className={`bk-tile bk-tile-static ${warn ? 'bk-tile-warn' : ''}`}>
-                <span className={`bk-tile-icon ${codicon(icon)}`} />
+                <span className={`bk-tile-icon ${codicon(icon)}`} aria-hidden="true" />
                 <span className="bk-tile-label">{label}</span>
                 <span className="bk-tile-value">{value}</span>
                 <span className="bk-tile-detail" title={detail}>
@@ -988,7 +986,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             <ul className="bk-errors">
                                 {stats.errors.recent.map((error) => (
                                     <li key={`${error.at}:${error.command}`} className="bk-error-row">
-                                        <span className={`bk-error-icon ${codicon('error')}`} />
+                                        <span className={`bk-error-icon ${codicon('error')}`} aria-hidden="true" />
                                         <span className="bk-error-text">
                                             <span className="bk-mono">brok {error.command}</span> ·{' '}
                                             <span className="bk-muted-inline">{error.at.slice(0, 16).replace('T', ' ')}</span>
@@ -1049,7 +1047,11 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                     <ul className="bk-checks">
                         {[...failing, ...checks.filter((check) => check.status === 'ok')].map((check) => (
                             <li key={`${check.name}:${check.status}:${check.detail}`} className={`bk-check-row bk-check-${check.status}`}>
-                                <span className={`bk-check-icon ${codicon(icon(check.status))}`} />
+                                <span
+                                    className={`bk-check-icon ${codicon(icon(check.status))}`}
+                                    role="img"
+                                    aria-label={checkLabel(check.status)}
+                                />
                                 <span className="bk-check-name">{check.name}</span>
                                 <span className="bk-check-detail">
                                     <span title={check.detail}>{check.detail}</span>
@@ -1109,7 +1111,6 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                         <input
                             className="theia-input"
                             value={draft.title}
-                            aria-label={t('Review hangs on large diffs')}
                             placeholder={t('Review hangs on large diffs')}
                             onChange={(e) => set({ title: e.currentTarget.value })}
                         />
@@ -1155,7 +1156,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 {this.prepared && (
                     <section className="bk-settings-group">
                         <div className="bk-group-head">
-                            <span className={codicon('pass')} />
+                            <span className={codicon('pass')} aria-hidden="true" />
                             <span className="bk-group-title">{t('Report ready')}</span>
                         </div>
                         <p className="bk-settings-note">
@@ -1166,7 +1167,7 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                         </p>
                         <div className="bk-buttons">
                             <button type="button" className="theia-button main" onClick={() => this.openIssue()}>
-                                <span className={codicon('github')} /> {t('Open the issue on GitHub')}
+                                <span className={codicon('github')} aria-hidden="true" /> {t('Open the issue on GitHub')}
                             </button>
                             <button
                                 type="button"
@@ -1277,7 +1278,6 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                 key={`${key}:${value}`}
                 className="theia-input bk-text"
                 defaultValue={value}
-                aria-label={placeholder}
                 placeholder={placeholder}
                 spellCheck={false}
                 onBlur={(e) => commit(e.currentTarget)}
@@ -1613,6 +1613,18 @@ function sectionDescription(section: SettingsSection): string {
             return t(
                 'Tell us what went wrong: the report comes with the diagnostics we need, secrets masked, and opens as a GitHub issue you review before sending.',
             );
+    }
+}
+
+/** What the icon of a health check says. */
+function checkLabel(status: DoctorCheck['status']): string {
+    switch (status) {
+        case 'ok':
+            return t('OK');
+        case 'warn':
+            return t('Warning');
+        default:
+            return t('Failed');
     }
 }
 

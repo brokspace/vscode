@@ -18,6 +18,8 @@ uses [Semantic Versioning](https://semver.org/).
 - **Brokspace: Get Started** shows the checklist again after the first answer too. Before, it showed nothing ([#46](https://github.com/brokspace/vscode/issues/46)).
 - The model menu takes the keyboard when it opens, also while the models load, so arrows and Escape work ([#44](https://github.com/brokspace/vscode/issues/44)).
 - Screen readers hear the names of the settings sections in a narrow sidebar, where only icons show, and the sections wrap instead of scrolling out of view ([#47](https://github.com/brokspace/vscode/issues/47)).
+- Screen readers read the settings fields by their labels. The Model, Links and Report a Bug fields were read as their example text, such as `http://localhost:11434/v1` for **Base URL**, and the memory filter by scope had no name ([#47](https://github.com/brokspace/vscode/issues/47)).
+- Screen readers no longer read decorative icons, say whether each **Diagnostics** check passed, warned or failed (before, only its icon showed it), and name the group of fields of each model provider ([#47](https://github.com/brokspace/vscode/issues/47)).
 - The history search box follows the editor theme, the model name stays visible in the narrowest sidebar, and counts of one read in the singular ([#47](https://github.com/brokspace/vscode/issues/47)).
 
 ## [0.5.2] - 2026-11-26
