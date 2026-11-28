@@ -50,6 +50,11 @@ test('colors come from the theme, with a fallback at most', () => {
     }
 });
 
+test('the settings sections stay named when only their icons show', () => {
+    const nav = read('settings.tsx').split('className="bk-settings-nav"')[1]?.split('</nav>')[0] ?? '';
+    assert.match(nav, /aria-label=\{sectionTitle\(id\)\}/);
+});
+
 test('streamed answers are announced through a status region, not the whole log', () => {
     const chat = read('chat.tsx');
     assert.match(chat, /role="status"/);

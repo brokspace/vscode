@@ -45,7 +45,7 @@ export function HistoryApp({ host, active, onOpened }: { host: Host; active: boo
             <div className="bk-history-tools">
                 <input
                     type="search"
-                    className="bk-text"
+                    className="theia-input bk-text"
                     value={query}
                     placeholder={t('Search conversations')}
                     aria-label={t('Search conversations')}
@@ -75,7 +75,7 @@ export function HistoryApp({ host, active, onOpened }: { host: Host; active: boo
                             <span className="bk-history-title">{session.title}</span>
                             <span className="bk-history-meta">
                                 {new Date(session.updatedAt).toLocaleString(window.__BROKSPACE__.language)} ·{' '}
-                                {t('{0} messages', session.turns)}
+                                {session.turns === 1 ? t('1 message') : t('{0} messages', session.turns)}
                             </span>
                         </button>
                         <button

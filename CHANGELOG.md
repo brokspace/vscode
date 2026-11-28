@@ -6,6 +6,13 @@ uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Opening the Brokspace view shows the chat: the Overview and Memory views start collapsed, which had squeezed the chat until its message box was out of sight. A layout you already arranged is kept ([#40](https://github.com/brokspace/vscode/issues/40)).
+- The model menu takes the keyboard when it opens, also while the models load, so arrows and Escape work ([#44](https://github.com/brokspace/vscode/issues/44)).
+- Screen readers hear the names of the settings sections in a narrow sidebar, where only icons show, and the sections wrap instead of scrolling out of view ([#47](https://github.com/brokspace/vscode/issues/47)).
+- The history search box follows the editor theme, the model name stays visible in the narrowest sidebar, and counts of one read in the singular ([#47](https://github.com/brokspace/vscode/issues/47)).
+
 ## [0.5.2] - 2026-11-26
 
 ### Fixed

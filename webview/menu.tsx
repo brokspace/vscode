@@ -46,6 +46,19 @@ export function PopMenu({
     const button = React.useRef<HTMLButtonElement>(null);
     const menu = React.useRef<HTMLDivElement>(null);
 
+    // The first item from `from` that can take the focus, going `step` at a time.
+    const enabled = (from: number, step: 1 | -1) => {
+        for (let n = 0; n < items.length; n++) {
+            const index = (((from + n * step) % items.length) + items.length) % items.length;
+            if (!items[index]?.disabled) {
+                return index;
+            }
+        }
+        return 0;
+    };
+    // A menu may open while its items still load: the focus follows them.
+    const current = enabled(active, 1);
+
     const close = React.useCallback((restore: boolean) => {
         setOpen(false);
         if (restore) {
@@ -71,26 +84,26 @@ export function PopMenu({
         return () => document.removeEventListener('mousedown', away);
     }, [open]);
 
+    // biome-ignore lint/correctness/useExhaustiveDependencies: focus again when the number of items changes.
     React.useEffect(() => {
         if (open) {
-            menu.current?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]')[active]?.focus();
+            menu.current?.querySelectorAll<HTMLButtonElement>('[role^="menuitem"]')[current]?.focus();
         }
-    }, [open, active]);
+    }, [open, current, items.length]);
 
     const onKeyDown = (event: React.KeyboardEvent) => {
-        const last = items.length - 1;
         switch (event.key) {
             case 'ArrowDown':
-                setActive((i) => (i >= last ? 0 : i + 1));
+                setActive(enabled(current + 1, 1));
                 break;
             case 'ArrowUp':
-                setActive((i) => (i <= 0 ? last : i - 1));
+                setActive(enabled(current - 1, -1));
                 break;
             case 'Home':
-                setActive(0);
+                setActive(enabled(0, 1));
                 break;
             case 'End':
-                setActive(last);
+                setActive(enabled(items.length - 1, -1));
                 break;
             case 'Escape':
                 close(true);
@@ -119,6 +132,10 @@ export function PopMenu({
                     if (event.key === 'ArrowDown' && !open) {
                         show();
                         event.preventDefault();
+                    } else if (event.key === 'Escape' && open) {
+                        close(true);
+                        event.preventDefault();
+                        event.stopPropagation();
                     }
                 }}
             >
@@ -140,7 +157,7 @@ export function PopMenu({
                                 role={item.checked !== undefined ? 'menuitemradio' : 'menuitem'}
                                 {...(item.checked !== undefined ? { 'aria-checked': item.checked } : {})}
                                 disabled={item.disabled}
-                                tabIndex={index === active ? 0 : -1}
+                                tabIndex={index === current ? 0 : -1}
                                 className="bk-nav-item"
                                 onClick={() => {
                                     close(false);

@@ -149,6 +149,8 @@ export class SettingsApp extends React.Component<{ host: Host }> {
                             key={id}
                             className={`bk-settings-tab ${this.section === id ? 'bk-settings-tab-on' : ''}`}
                             aria-current={this.section === id ? 'page' : undefined}
+                            aria-label={sectionTitle(id)}
+                            title={sectionTitle(id)}
                             onClick={() => this.showSection(id)}
                         >
                             <span className={codicon(icon)} />

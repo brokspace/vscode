@@ -86,9 +86,11 @@ export function ChatApp({
                                 ? t('The answer failed: {0}', msg.turn.error)
                                 : msg.turn.cancelled
                                   ? t('The answer was stopped')
-                                  : msg.turn.sources.length > 0
-                                    ? t('Answer ready, with {0} sources', msg.turn.sources.length)
-                                    : t('Answer ready'),
+                                  : msg.turn.sources.length === 1
+                                    ? t('Answer ready, with 1 source')
+                                    : msg.turn.sources.length > 1
+                                      ? t('Answer ready, with {0} sources', msg.turn.sources.length)
+                                      : t('Answer ready'),
                         );
                         setTurns((all) => all.map((turn) => (turn.id === msg.turn.id ? msg.turn : turn)));
                         break;
@@ -662,7 +664,7 @@ function Activity({ steps, running, host }: { steps: ActivityStep[]; running: bo
     };
     return (
         <details className="bk-activity" open={running}>
-            <summary>{t('Activity: {0} steps', steps.length)}</summary>
+            <summary>{steps.length === 1 ? t('Activity: 1 step') : t('Activity: {0} steps', steps.length)}</summary>
             <ol className="bk-steps">
                 {steps.map((step) => (
                     <li key={step.id} className={`bk-step bk-step-${step.status}`}>
